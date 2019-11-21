@@ -63,8 +63,8 @@ results_full = bind_rows(results_panel1_raw %>% mutate(panel = 1)
                          , results_panel2_raw %>% mutate(panel = 2)) %>%
   mutate(arm = case_when(grepl('a', `FC-B_1`, ignore.case = TRUE) ~ "purity_base"
                          , grepl('a', `FC-C_1`, ignore.case = TRUE) ~ "purity_extension"
-                         , grepl('a', `FC-D_1`, ignore.case = TRUE) ~ "fairness_base"
-                         , grepl('a', `FC-E_1`, ignore.case = TRUE) ~ "fairness_extension"
+                         , grepl('a', `FC-D_1`, ignore.case = TRUE) ~ "care_base"
+                         , grepl('a', `FC-E_1`, ignore.case = TRUE) ~ "care_extension"
                          , TRUE ~ "control") %>% factor()
          , node = paste0(arm, "_panel_", panel)) #%>%
   # merge(bind_rows(participant_detail_panel1, participant_detail_panel2)
@@ -195,6 +195,25 @@ _[[TBD]]_. (see _\autoref{fig:model_1_explore}_)
 
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
 # Exploratory
+
+```
+
+```{r}
+# Summaries
+all_data = data.table(results_full)
+all_data[ , .(ubi=mean(as.numeric(UBI_2))), by=list(panel, arm) ]
+```
+
+```{r}
+# liberals - homeless story
+all_data[ panel==1 & arm != 'care_base' & arm != 'care_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+# conservatives - homeless story
+all_data[ panel==2 & arm != 'care_base' & arm != 'care_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+
+# liberals - jacket story
+all_data[ panel==1 & arm != 'purity_base' & arm != 'purity_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+# conservatives - jacket story
+all_data[ panel==2 & arm != 'purity_base' & arm != 'purity_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
 ```
 
 ```{r methodology_model_1}
