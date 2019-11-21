@@ -1,7 +1,10 @@
 ---
 title: "Can Exposure to Moral Foundations Affect Our Reactions to Policy Proposals?"
+subtitle: "W241 Experiments and Causality (submitted December X, 2019)"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
-date: "W241 Experiments and Causality (submitted December X, 2019)"
+date: "December 10, 2019"
+tags: [T, B, D]
+abstract: TBD
 output:
   pdf_document:
     fig_caption: yes
@@ -16,21 +19,16 @@ output:
 
 ```{r setup, include = FALSE}
 rm(list=ls())
-library(openxlsx)
-library(tidyverse)
-library(data.table)
-library(DiagrammeR)
-library(lmtest)
-library(sandwich)
-library(car)
-library(gridExtra)
-library(stargazer)
-library(cowplot)
-library(corrplot)
-library(knitr)
+
+packages = c('openxlsx'
+             , 'tidyverse', 'data.table'
+             , 'visNetwork'
+             , 'lmtest', 'sandwich', 'car'
+             , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
+             , 'knitr')
+lapply(packages, library, character.only = TRUE)
 
 stargazer_type = "text" # change to latex when ready to knit
-
 ```
 
 \pagebreak
@@ -42,10 +40,17 @@ _[[TBD]]_
 _[[TBD]]_  
 
 ```{r import}
-results_panel1_raw = read.xlsx("./data/pilot/survey_results_pilot_panel1.xlsx") %>% filter(StartDate != "Start Date")
-results_panel2_raw = read.xlsx("./data/pilot/survey_results_pilot_panel2.xlsx") %>% filter(StartDate != "Start Date")
-participant_detail_panel1 = read.csv("./data/pilot/participant_detail_pilot_panel1.csv", stringsAsFactors = FALSE)
-participant_detail_panel2 = read.csv("./data/pilot/participant_detail_pilot_panel2.csv", stringsAsFactors = FALSE)
+# Pilot
+# results_panel1_raw = read.xlsx("./data/pilot/survey_results_pilot_panel1.xlsx") %>% filter(StartDate != "Start Date")
+# results_panel2_raw = read.xlsx("./data/pilot/survey_results_pilot_panel2.xlsx") %>% filter(StartDate != "Start Date")
+# participant_detail_panel1 = read.csv("./data/pilot/participant_detail_pilot_panel1.csv", stringsAsFactors = FALSE)
+# participant_detail_panel2 = read.csv("./data/pilot/participant_detail_pilot_panel2.csv", stringsAsFactors = FALSE)
+
+# Study
+results_panel1_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 20, 2019_07.25.xlsx") %>% filter(!grepl("Start|Import", StartDate))
+results_panel2_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 20, 2019_07.26.xlsx") %>% filter(!grepl("Start|Import", StartDate))
+participant_detail_panel1 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1.csv", stringsAsFactors = FALSE)
+participant_detail_panel2 = read.csv("./data/study/prolific_export_5dd4a34135582248315dfdca.csv", stringsAsFactors = FALSE)
 ```
 
 ### Data Cleaning  
@@ -60,11 +65,26 @@ results_full = bind_rows(results_panel1_raw %>% mutate(panel = 1)
                          , grepl('a', `FC-C_1`, ignore.case = TRUE) ~ "purity_extension"
                          , grepl('a', `FC-D_1`, ignore.case = TRUE) ~ "fairness_base"
                          , grepl('a', `FC-E_1`, ignore.case = TRUE) ~ "fairness_extension"
-                         , TRUE ~ "other")) %>%
-  merge(bind_rows(participant_detail_panel1, participant_detail_panel2)
-        , by.x = "PROLIFIC_PID"
-        , by.y = "participant_id"
-        , all.x = TRUE) 
+                         , TRUE ~ "control") %>% factor()
+         , node = paste0(arm, "_panel_", panel)) #%>%
+  # merge(bind_rows(participant_detail_panel1, participant_detail_panel2)
+  #       , by.x = "PROLIFIC_PID"
+  #       , by.y = "participant_id"
+  #       , all.x = TRUE) 
+
+names(results_full) = gsub(x = names(results_full), pattern = "\\-|\\.", replacement = "_")  
+
+# Discrete variables as factors (manual ordering for plotting)
+ideology_levels = c("Very Liberal", "Lean Liberal", "Liberal", "Moderate", "Conservative", "Lean Conservative", "Very Conservative")
+results_full$ideology = factor(results_full$PoliSpect, levels = ideology_levels)
+
+results_full$UBI_number = as.numeric(results_full$UBI_2)
+
+UBI_group_levels = c("Promoter", "Passive", "Detractor")
+results_full$UBI_group = factor(results_full$UBI_2_NPS_GROUP, levels = UBI_group_levels)
+
+UBI_familiarity_levels = c("Extremely familiar", "Very familiar", "Moderately familiar", "Slightly familiar", "Not familiar at all")
+results_full$UBI_familiarity = factor(results_full$`UBI_F`, levels = UBI_familiarity_levels)
 ```
 
 ## Exploratory Analysis  
@@ -74,64 +94,82 @@ _[[TBD]]_
 
 ```{r exploratory, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Setup"}
 arm_counts = results_full %>%
-  group_by(arm, panel) %>%
+  group_by(arm, panel, node) %>%
   summarise(count = n())
 
-grViz("digraph flowchart {
-      # node definitions with substituted label text
-      node [fontname = Helvetica, shape = rectangle]        
-      tab1 [label = '@@1']
-      tab2 [label = '@@2']
-      tab3 [label = '@@3']
-      tab4 [label = '@@4']
-      tab5 [label = '@@5']
-      tab6 [label = '@@6']
-      tab7 [label = '@@7']
-      tab8 [label = '@@8']
-      tab9 [label = '@@9']
-      tab10 [label = '@@10']
-      tab11 [label = '@@11']
+nodes = data.frame(
+  id = 1:12
+  , group = c("liberal", "conservative", arm_counts$arm)
+  , label = c("liberal", "conservative", arm_counts$node)
+  , value = c(sum(arm_counts$count[arm_counts$panel==1]), sum(arm_counts$count[arm_counts$panel==2]), arm_counts$count)
+  # color, title, shape
+  )
 
-      # edge definitions with the node IDs
-      tab1 -> tab2 -> tab3 -> tab4;
-      tab1 -> tab2 -> tab5 -> tab6;
-      tab1 -> tab7 -> tab8 -> tab9;
-      tab1 -> tab7 -> tab10 -> tab11;
-      }
+edges = data.frame(
+  from = c(1, 2, 1, 2, 1, 2,  5, 6, 9,  10)
+  , to = c(3, 4, 5, 6, 9, 10, 7, 8, 11, 12)
+  )
 
-      [1]: 'Total n=24 participants'
-      [2]: 'Liberals n=12'
-      [3]: 'Purity n=8'
-      [4]: 'Purity (extension) n=4'
-      [5]: 'Fairness n=4'
-      [6]: 'Fairness (extension) n=4'
-      [7]: 'Conservatives n=12'
-      [8]: 'Purity n=8'
-      [9]: 'Purity (extension) n=4'
-      [10]: 'Fairness n=4'
-      [11]: 'Fairness (extension) n=4'
-      ")
+visNetwork(nodes, edges) %>% 
+  visHierarchicalLayout()
 ```
 
 ### Demographics  
 
 ```{r exploratory_demographics, fig.align="center", fig.cap="Demographics"}
-# Age, Gender, Urban, PoliSpect
-ideology_levels = c("Very Liberal", "Lean Liberal", "Liberal", "Moderate", "Conservative", "Lean Conservative", "Very Conservative")
-age_breakdown = results_full %>% 
-  group_by(Age, PoliSpect) %>%
-  summarise(count = n()) %>%
-  mutate(PoliSpect_factor = factor(PoliSpect, levels = ideology_levels))
-ggplot(data = age_breakdown, aes(x = Age, y = count, fill = PoliSpect_factor)) +
-  geom_bar(stat="identity") +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill")
+# Ideology
+ggplot(data = results_full %>%  group_by(ideology, panel) %>% summarise(count = n())
+       , aes(x = ideology, y = count, fill = ideology)) +
+  geom_bar(stat="identity") + 
+  facet_grid( ~ panel) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Age
+ggplot(data = results_full %>% group_by(Age, ideology, panel) %>% summarise(count = n())
+       , aes(x = Age, y = count, fill = ideology)) +
+  geom_bar(stat="identity") + 
+  facet_grid( ~ panel) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Gender
+ggplot(data = results_full %>% group_by(Gender, ideology, panel) %>% summarise(count = n())
+       , aes(x = Gender, y = count, fill = ideology)) +
+  geom_bar(stat="identity") + 
+  facet_grid( ~ panel) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Urban
+ggplot(data = results_full %>% group_by(Urban, ideology, panel) %>% summarise(count = n())
+       , aes(x = Urban, y = count, fill = ideology)) +
+  geom_bar(stat="identity") + 
+  facet_grid( ~ panel) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TBD]]_   
 
 ### Reactions  
 
-```{r exploratory_reactions, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Reactions"}
+```{r exploratory_reactions, fig.align="center", fig.cap="Reactions"}
+
+# Histogram of familiarity
+ggplot(data = results_full %>% group_by(UBI_familiarity, ideology, panel) %>% summarise(count = n())
+       , aes(x = UBI_familiarity, y = count, fill = ideology)) +
+  geom_bar(stat="identity") + 
+  facet_grid( ~ panel) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Heat map of number UBI like
+ggplot(data = results_full %>% group_by(UBI_familiarity, ideology) %>% summarise(UBI_number_avg = mean(UBI_number))
+       , aes(x = UBI_familiarity, y = ideology, fill = UBI_number_avg)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "Spectral") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
@@ -160,7 +198,8 @@ _[[TBD]]_. (see _\autoref{fig:model_1_explore}_)
 ```
 
 ```{r methodology_model_1}
-# model_1 = lm(Y ~ X, data = data)
+model_1 = lm(UBI_number ~ arm+panel, data = results_full)
+stargazer(model_1, type = stargazer_type) 
 ```
 
 _[[Example Table]]_  
