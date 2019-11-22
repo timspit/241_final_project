@@ -104,7 +104,7 @@ results_full = results_stacked  %>%
          , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
          , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
          # Numeric variables
-         , ubi_number = as.numeric(ubi_2)) 
+         , ubi_number = as.numeric(ubi_2))
 
 results_clean = results_full %>%
   select(prolific_pid, panel, arm, node
@@ -138,7 +138,7 @@ edges = data.frame(
   , to = c(3, 4, 5, 6, 9, 10, 7, 8, 11, 12)
   )
 
-visNetwork(nodes, edges) %>% 
+visNetwork(nodes, edges) %>%
   visHierarchicalLayout()
 ```
 
@@ -148,31 +148,31 @@ visNetwork(nodes, edges) %>%
 
 grpstackbar_plot = ggplot() +
   facet_grid( ~ panel) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Ideology
 grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(ideology, panel) %>% summarise(count = n())
            , aes(x = ideology, y = count, fill = ideology)
-           , stat = "identity") 
+           , stat = "identity")
 # Age
 grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(age, ideology, panel) %>% summarise(count = n())
            , aes(x = age, y = count, fill = ideology)
-           , stat = "identity") 
+           , stat = "identity")
 
 # Gender
 grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(gender, ideology, panel) %>% summarise(count = n())
            , aes(x = gender, y = count, fill = ideology)
-           , stat = "identity") 
+           , stat = "identity")
 
 # Urban
 grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(urban, ideology, panel) %>% summarise(count = n())
            , aes(x = urban, y = count, fill = ideology)
-           , stat = "identity") 
+           , stat = "identity")
 ```
 
 Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TBD]]_   
@@ -185,7 +185,7 @@ Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TB
 # grpstackbar_plot +
 #   geom_bar(data = results_clean %>% filter(arm == "purity_base") %>% group_by(ideology, panel, purity_self) %>% summarise(count = n())
 #            , aes(x = purity_self, y = count, fill = ideology)
-#            , stat = "identity") 
+#            , stat = "identity")
 
 results_response_melt = results_clean %>% select(panel, arm, purity_self, purity_repulsed, purity_injustice, purity_relieved) %>%
   melt(id.vars = c("panel", "arm")
@@ -193,7 +193,7 @@ results_response_melt = results_clean %>% select(panel, arm, purity_self, purity
        , variable.name = "prompt"
   ) %>%
   filter(!is.na(value)) %>%
-  group_by(panel, arm, prompt, value) %>% summarise(count = n()) 
+  group_by(panel, arm, prompt, value) %>% summarise(count = n())
 
 #### TO DO - spread to wide ####
   # spread(key = c("panel", "arm", "prompt")
@@ -206,17 +206,17 @@ results_response_melt = results_clean %>% select(panel, arm, purity_self, purity
 # Histogram of familiarity
 ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology, panel) %>% summarise(count = n())
        , aes(x = ubi_familiarity, y = count, fill = ideology)) +
-  geom_bar(stat="identity") + 
+  geom_bar(stat="identity") +
   facet_grid( ~ panel) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Heat map of number UBI like
 ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number))
        , aes(x = ubi_familiarity, y = ideology, fill = ubi_number_avg)) +
   geom_tile() +
   scale_fill_distiller(direction = 1) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 \pagebreak
@@ -235,6 +235,7 @@ _[[TBD]]_. (see _\autoref{fig:model_1_explore}_)
 
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
 # Exploratory
+
 model_1_purity_base = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_base") & panel == 1))
 model_1_purity_ext = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_extension") & panel == 1))
 model_2_purity_base = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_base") & panel == 2))
@@ -242,14 +243,69 @@ model_2_purity_ext = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in
 
 stargazer(model_1_purity_base, model_1_purity_ext, model_2_purity_base, model_2_purity_ext
           , column.labels = c("P1, Purity Base", "P1, Purity Ext", "P2, Purity Base", "P2, Purity Ext")
-          , type = stargazer_type) 
+          , type = stargazer_type)
+
+```
+
+```{r}
+# Summaries
+all_data = data.table(results_full)
+all_data[ , .(ubi=mean(as.numeric(UBI_2))), by=list(panel, arm) ]
+```
+
+```{r}
+
+# augment model with results from coefteest and coefci using
+# the supplied variance/covariance matrix
+apply_robust_estimates = function(model, vcovmatrix) {
+  model$robust.coeftest = coeftest(model, vcov. = vcovmatrix)
+  model$robust.estimate = model$robust.coeftest[, 'Estimate']
+  model$robust.std.error = model$robust.coeftest[, 'Std. Error']
+  model$robust.statistic = model$robust.coeftest[, 't value']
+  model$robust.p.value = model$robust.coeftest[, 'Pr(>|t|)']
+  model$robust.coefci = coefci(model, vcov. = vcovmatrix)
+  model$robust.ci.low = model$robust.coefci[, "2.5 %"]
+  model$robust.ci.high = model$robust.coefci[, "97.5 %"]
+  model
+}
+
+
+# liberals - homeless story
+hom_lib_mod<-all_data[ panel==1 & arm != 'care_base' & arm != 'care_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+hom_lib_mod<-apply_robust_estimates(hom_lib_mod, vcovHC(hom_lib_mod))
+# conservatives - homeless story
+hom_con_mod<-all_data[ panel==2 & arm != 'care_base' & arm != 'care_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+hom_con_mod<-apply_robust_estimates(hom_con_mod, vcovHC(hom_con_mod))
+
+# liberals - jacket story
+jac_lib_mod<-all_data[ panel==1 & arm != 'purity_base' & arm != 'purity_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+jac_lib_mod<-apply_robust_estimates(jac_lib_mod, vcovHC(jac_lib_mod))
+# conservatives - jacket story
+jac_con_mod<-all_data[ panel==2 & arm != 'purity_base' & arm != 'purity_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
+jac_con_mod<-apply_robust_estimates(jac_con_mod, vcovHC(jac_con_mod))
+
+
+stargazer(hom_lib_mod, hom_con_mod,
+          type = 'text',
+          se = list(sqrt(diag(vcovHC(hom_lib_mod))),
+                    sqrt(diag(vcovHC(hom_con_mod)))),
+          header=F,
+          report=('v*c*sp'))
+
+
+stargazer(jac_lib_mod, jac_con_mod,
+          type = 'text', 
+          se = list(sqrt(diag(vcovHC(jac_lib_mod))),
+                    sqrt(diag(vcovHC(jac_con_mod)))),
+          header=F,
+          report=('v*c*sp'))
 
 ```
 
 ```{r methodology_model_1}
 model_1 = lm(ubi_number ~ arm+panel, data = results_full)
 
-stargazer(model_1, type = stargazer_type) 
+stargazer(model_1, type = stargazer_type)
 ```
 
 _[[Example Table]]_  
