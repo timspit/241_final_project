@@ -59,32 +59,60 @@ _[[TBD]]_  [^1]
 [^1]: _[[Example footnote]]_  
 
 ```{r data_cleaning}
-results_full = bind_rows(results_panel1_raw %>% mutate(panel = 1)
-                         , results_panel2_raw %>% mutate(panel = 2)) %>%
-  mutate(arm = case_when(grepl('a', `FC-B_1`, ignore.case = TRUE) ~ "purity_base"
-                         , grepl('a', `FC-C_1`, ignore.case = TRUE) ~ "purity_extension"
-                         , grepl('a', `FC-D_1`, ignore.case = TRUE) ~ "fairness_base"
-                         , grepl('a', `FC-E_1`, ignore.case = TRUE) ~ "fairness_extension"
-                         , TRUE ~ "control") %>% factor()
-         , node = paste0(arm, "_panel_", panel)) #%>%
-  # merge(bind_rows(participant_detail_panel1, participant_detail_panel2)
-  #       , by.x = "PROLIFIC_PID"
-  #       , by.y = "participant_id"
-  #       , all.x = TRUE) 
+# Stack panel data
+results_stacked = bind_rows(results_panel1_raw %>% mutate(panel = 1)
+                            , results_panel2_raw %>% mutate(panel = 2)) %>%
+  merge(bind_rows(participant_detail_panel1, participant_detail_panel2) %>% select(-session_id, -status, -age)
+        , by.x = "PROLIFIC_PID"
+        , by.y = "participant_id"
+        , all.x = TRUE)
 
-names(results_full) = gsub(x = names(results_full), pattern = "\\-|\\.", replacement = "_")  
+# Adjust all variable names to remove '-' and '.' + lowercase
+names(results_stacked) = tolower(gsub(x = names(results_stacked), pattern = "\\-|\\.", replacement = "_"))
 
 # Discrete variables as factors (manual ordering for plotting)
 ideology_levels = c("Very Liberal", "Lean Liberal", "Liberal", "Moderate", "Conservative", "Lean Conservative", "Very Conservative")
-results_full$ideology = factor(results_full$PoliSpect, levels = ideology_levels)
+ubi_group_levels = c("Promoter", "Passive", "Detractor")
+ubi_familiarity_levels = c("Extremely familiar", "Very familiar", "Moderately familiar", "Slightly familiar", "Not familiar at all")
 
-results_full$UBI_number = as.numeric(results_full$UBI_2)
+results_full = results_stacked  %>%
+  # Define arms and nodes
+  mutate(arm = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ "purity_base"
+                         , grepl('a', fc_c_1, ignore.case = TRUE) ~ "purity_extension"
+                         , grepl('a', fc_d_1, ignore.case = TRUE) ~ "fairness_base"
+                         , grepl('a', fc_e_1, ignore.case = TRUE) ~ "fairness_extension"
+                         , TRUE ~ "control") %>% factor()
+         , node = paste0(arm, "_panel_", panel)
+         # Combine reaction vars from different arms
+         , purity_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
+                                 , TRUE ~ fc_c_1)
+         , purity_repulsed = case_when(grepl('a', fc_b_2, ignore.case = TRUE) ~ fc_b_2
+                                 , TRUE ~ fc_c_2)
+         , purity_injustice = case_when(grepl('a', fc_b_3, ignore.case = TRUE) ~ fc_b_3
+                                 , TRUE ~ fc_c_3)
+         , purity_relieved = fc_c_4
+         , fairness_self = case_when(grepl('a', fc_d_1, ignore.case = TRUE) ~ fc_d_1
+                                 , TRUE ~ fc_e_1)
+         , fairness_pain = case_when(grepl('a', fc_d_2, ignore.case = TRUE) ~ fc_d_2
+                                     , TRUE ~ fc_e_2)
+         , fairness_injustice = case_when(grepl('a', fc_d_3, ignore.case = TRUE) ~ fc_d_3
+                                 , TRUE ~ fc_e_3)
+         , fairness_relieved = fc_e_4
+         , open_text_reaction = q3_fc2
+         # Factor variables
+         , ideology = factor(polispect, levels = ideology_levels)
+         , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
+         , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
+         # Numeric variables
+         , ubi_number = as.numeric(ubi_2)) 
 
-UBI_group_levels = c("Promoter", "Passive", "Detractor")
-results_full$UBI_group = factor(results_full$UBI_2_NPS_GROUP, levels = UBI_group_levels)
-
-UBI_familiarity_levels = c("Extremely familiar", "Very familiar", "Moderately familiar", "Slightly familiar", "Not familiar at all")
-results_full$UBI_familiarity = factor(results_full$`UBI_F`, levels = UBI_familiarity_levels)
+results_clean = results_full %>%
+  select(prolific_pid, panel, arm, node
+         , ideology, age, gender, urban, employment_status, student_status
+         , purity_self, purity_repulsed, purity_injustice, purity_relieved
+         , fairness_self, fairness_pain, fairness_injustice, fairness_relieved
+         , open_text_reaction
+         , ubi_number, ubi_group, ubi_familiarity)
 ```
 
 ## Exploratory Analysis  
@@ -93,7 +121,7 @@ _[[TBD]]_
 ### Study Setup  
 
 ```{r exploratory, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Setup"}
-arm_counts = results_full %>%
+arm_counts = results_clean %>%
   group_by(arm, panel, node) %>%
   summarise(count = n())
 
@@ -117,37 +145,34 @@ visNetwork(nodes, edges) %>%
 ### Demographics  
 
 ```{r exploratory_demographics, fig.align="center", fig.cap="Demographics"}
-# Ideology
-ggplot(data = results_full %>%  group_by(ideology, panel) %>% summarise(count = n())
-       , aes(x = ideology, y = count, fill = ideology)) +
-  geom_bar(stat="identity") + 
+
+grpstackbar_plot = ggplot() +
   facet_grid( ~ panel) +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+# Ideology
+grpstackbar_plot +
+  geom_bar(data = results_clean %>%  group_by(ideology, panel) %>% summarise(count = n())
+           , aes(x = ideology, y = count, fill = ideology)
+           , stat = "identity") 
 # Age
-ggplot(data = results_full %>% group_by(Age, ideology, panel) %>% summarise(count = n())
-       , aes(x = Age, y = count, fill = ideology)) +
-  geom_bar(stat="identity") + 
-  facet_grid( ~ panel) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+grpstackbar_plot +
+  geom_bar(data = results_clean %>%  group_by(age, ideology, panel) %>% summarise(count = n())
+           , aes(x = age, y = count, fill = ideology)
+           , stat = "identity") 
 
 # Gender
-ggplot(data = results_full %>% group_by(Gender, ideology, panel) %>% summarise(count = n())
-       , aes(x = Gender, y = count, fill = ideology)) +
-  geom_bar(stat="identity") + 
-  facet_grid( ~ panel) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+grpstackbar_plot +
+  geom_bar(data = results_clean %>%  group_by(gender, ideology, panel) %>% summarise(count = n())
+           , aes(x = gender, y = count, fill = ideology)
+           , stat = "identity") 
 
 # Urban
-ggplot(data = results_full %>% group_by(Urban, ideology, panel) %>% summarise(count = n())
-       , aes(x = Urban, y = count, fill = ideology)) +
-  geom_bar(stat="identity") + 
-  facet_grid( ~ panel) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+grpstackbar_plot +
+  geom_bar(data = results_clean %>%  group_by(urban, ideology, panel) %>% summarise(count = n())
+           , aes(x = urban, y = count, fill = ideology)
+           , stat = "identity") 
 ```
 
 Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TBD]]_   
@@ -156,27 +181,42 @@ Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TB
 
 ```{r exploratory_reactions, fig.align="center", fig.cap="Reactions"}
 
-# Histogram of familiarity
-ggplot(data = results_full %>% group_by(UBI_familiarity, ideology, panel) %>% summarise(count = n())
-       , aes(x = UBI_familiarity, y = count, fill = ideology)) +
-  geom_bar(stat="identity") + 
-  facet_grid( ~ panel) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# results_clean %>% filter(arm == "purity_base") %>% group_by(ideology, panel, purity_self) %>% summarise(count = n())
+# grpstackbar_plot +
+#   geom_bar(data = results_clean %>% filter(arm == "purity_base") %>% group_by(ideology, panel, purity_self) %>% summarise(count = n())
+#            , aes(x = purity_self, y = count, fill = ideology)
+#            , stat = "identity") 
 
-# Heat map of number UBI like
-ggplot(data = results_full %>% group_by(UBI_familiarity, ideology) %>% summarise(UBI_number_avg = mean(UBI_number))
-       , aes(x = UBI_familiarity, y = ideology, fill = UBI_number_avg)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "Spectral") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+results_response_melt = results_clean %>% select(panel, arm, purity_self, purity_repulsed, purity_injustice, purity_relieved) %>%
+  melt(id.vars = c("panel", "arm")
+       , measure.vars = c("purity_self", "purity_repulsed", "purity_injustice", "purity_relieved")
+       , variable.name = "prompt"
+  ) %>%
+  filter(!is.na(value)) %>%
+  group_by(panel, arm, prompt, value) %>% summarise(count = n()) 
 
+#### TO DO - spread to wide ####
+  # spread(key = c("panel", "arm", "prompt")
+  #        , value = count)
 ```
 
 ### Outcome  
 
-```{r exploratory_outcome, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Outcomes"}
+```{r exploratory_outcome, fig.align="center", fig.cap="Outcomes"}
+# Histogram of familiarity
+ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology, panel) %>% summarise(count = n())
+       , aes(x = ubi_familiarity, y = count, fill = ideology)) +
+  geom_bar(stat="identity") + 
+  facet_grid( ~ panel) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
+# Heat map of number UBI like
+ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number))
+       , aes(x = ubi_familiarity, y = ideology, fill = ubi_number_avg)) +
+  geom_tile() +
+  scale_fill_distiller(direction = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
 
 \pagebreak
@@ -195,10 +235,20 @@ _[[TBD]]_. (see _\autoref{fig:model_1_explore}_)
 
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
 # Exploratory
+model_1_purity_base = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_base") & panel == 1))
+model_1_purity_ext = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_extension") & panel == 1))
+model_2_purity_base = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_base") & panel == 2))
+model_2_purity_ext = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_extension") & panel == 2))
+
+stargazer(model_1_purity_base, model_1_purity_ext, model_2_purity_base, model_2_purity_ext
+          , column.labels = c("P1, Purity Base", "P1, Purity Ext", "P2, Purity Base", "P2, Purity Ext")
+          , type = stargazer_type) 
+
 ```
 
 ```{r methodology_model_1}
-model_1 = lm(UBI_number ~ arm+panel, data = results_full)
+model_1 = lm(ubi_number ~ arm+panel, data = results_full)
+
 stargazer(model_1, type = stargazer_type) 
 ```
 
