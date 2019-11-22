@@ -84,20 +84,20 @@ results_full = results_stacked  %>%
                          , TRUE ~ "control") %>% factor()
          , node = paste0(arm, "_panel_", panel)
          # Combine reaction vars from different arms
-         , purity_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
+         , purity_q1_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
                                  , TRUE ~ fc_c_1)
-         , purity_repulsed = case_when(grepl('a', fc_b_2, ignore.case = TRUE) ~ fc_b_2
+         , purity_q2_repulsed = case_when(grepl('a', fc_b_2, ignore.case = TRUE) ~ fc_b_2
                                  , TRUE ~ fc_c_2)
-         , purity_injustice = case_when(grepl('a', fc_b_3, ignore.case = TRUE) ~ fc_b_3
+         , purity_q3_injustice = case_when(grepl('a', fc_b_3, ignore.case = TRUE) ~ fc_b_3
                                  , TRUE ~ fc_c_3)
-         , purity_relieved = fc_c_4
-         , fairness_self = case_when(grepl('a', fc_d_1, ignore.case = TRUE) ~ fc_d_1
+         , purity_q4_relieved = fc_c_4
+         , fairness_q1_self = case_when(grepl('a', fc_d_1, ignore.case = TRUE) ~ fc_d_1
                                  , TRUE ~ fc_e_1)
-         , fairness_pain = case_when(grepl('a', fc_d_2, ignore.case = TRUE) ~ fc_d_2
+         , fairness_q2_pain = case_when(grepl('a', fc_d_2, ignore.case = TRUE) ~ fc_d_2
                                      , TRUE ~ fc_e_2)
-         , fairness_injustice = case_when(grepl('a', fc_d_3, ignore.case = TRUE) ~ fc_d_3
+         , fairness_q3_injustice = case_when(grepl('a', fc_d_3, ignore.case = TRUE) ~ fc_d_3
                                  , TRUE ~ fc_e_3)
-         , fairness_relieved = fc_e_4
+         , fairness_q4_relieved = fc_e_4
          , open_text_reaction = q3_fc2
          # Factor variables
          , ideology = factor(polispect, levels = ideology_levels)
@@ -109,8 +109,8 @@ results_full = results_stacked  %>%
 results_clean = results_full %>%
   select(prolific_pid, panel, arm, node
          , ideology, age, gender, urban, employment_status, student_status
-         , purity_self, purity_repulsed, purity_injustice, purity_relieved
-         , fairness_self, fairness_pain, fairness_injustice, fairness_relieved
+         , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
+         , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , open_text_reaction
          , ubi_number, ubi_group, ubi_familiarity)
 ```
@@ -180,24 +180,23 @@ Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TB
 ### Reactions  
 
 ```{r exploratory_reactions, fig.align="center", fig.cap="Reactions"}
-
-# results_clean %>% filter(arm == "purity_base") %>% group_by(ideology, panel, purity_self) %>% summarise(count = n())
-# grpstackbar_plot +
-#   geom_bar(data = results_clean %>% filter(arm == "purity_base") %>% group_by(ideology, panel, purity_self) %>% summarise(count = n())
-#            , aes(x = purity_self, y = count, fill = ideology)
-#            , stat = "identity")
-
-results_response_melt = results_clean %>% select(panel, arm, purity_self, purity_repulsed, purity_injustice, purity_relieved) %>%
-  melt(id.vars = c("panel", "arm")
-       , measure.vars = c("purity_self", "purity_repulsed", "purity_injustice", "purity_relieved")
-       , variable.name = "prompt"
-  ) %>%
+results_response = results_clean %>% 
+  select(panel, arm
+         , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
+         , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved) %>%
+  gather(prompt, value, -panel, -arm) %>%
   filter(!is.na(value)) %>%
-  group_by(panel, arm, prompt, value) %>% summarise(count = n())
+  group_by(panel, arm, prompt, value) %>% summarise(count = n()) #%>%
+  # spread(value, count) %>%
+  # arrange(panel, arm, prompt) %>%
+  # select("panel", "arm", "prompt", "A great deal", "A lot", "A moderate amount", "A little", "None at all")
 
-#### TO DO - spread to wide ####
-  # spread(key = c("panel", "arm", "prompt")
-  #        , value = count)
+ggplot(data = results_response
+       , aes(x = prompt, y = value, fill = count)) +
+  geom_tile() +
+  facet_grid(rows = vars(arm), cols = vars(panel)) +
+  scale_fill_distiller(direction = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ### Outcome  
@@ -233,73 +232,43 @@ ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summaris
 
 _[[TBD]]_. (see _\autoref{fig:model_1_explore}_)
 
+```{r lm_function}
+my_lm_calcs = function(lm_in, clusters_in){
+  # Robust
+  vcov_robust = vcovHC(lm_in)
+  se_robust = sqrt(diag(vcov_robust))
+  # Cluster
+  if(length(clusters_in) > 1){
+    vcov_cluster = cluster.vcov(lm_in, clusters_in)
+    se_cluster = sqrt(diag(vcov_cluster))
+  } else {
+    vcov_cluster = NA
+    se_cluster = NA
+  }
+  # Output
+  lm_out = list(lm = lm_in
+                , vcov_robust = vcov_robust
+                , se_robust = se_robust
+                , vcov_cluster = vcov_cluster
+                , se_cluster = se_cluster
+  )
+  return(lm_out)
+}
+```
+
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
 # Exploratory
+model_panel1 = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(panel == 1)), clusters_in = NA)
+model_panel2 = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(panel == 2)), clusters_in = NA)
 
-model_1_purity_base = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_base") & panel == 1))
-model_1_purity_ext = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_extension") & panel == 1))
-model_2_purity_base = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_base") & panel == 2))
-model_2_purity_ext = lm(ubi_number ~ arm, data = results_full %>% filter(arm %in% c("control", "purity_extension") & panel == 2))
-
-stargazer(model_1_purity_base, model_1_purity_ext, model_2_purity_base, model_2_purity_ext
-          , column.labels = c("P1, Purity Base", "P1, Purity Ext", "P2, Purity Base", "P2, Purity Ext")
-          , type = stargazer_type)
-
-```
-
-```{r}
-# Summaries
-all_data = data.table(results_full)
-all_data[ , .(ubi=mean(as.numeric(UBI_2))), by=list(panel, arm) ]
-```
-
-```{r}
-
-# augment model with results from coefteest and coefci using
-# the supplied variance/covariance matrix
-apply_robust_estimates = function(model, vcovmatrix) {
-  model$robust.coeftest = coeftest(model, vcov. = vcovmatrix)
-  model$robust.estimate = model$robust.coeftest[, 'Estimate']
-  model$robust.std.error = model$robust.coeftest[, 'Std. Error']
-  model$robust.statistic = model$robust.coeftest[, 't value']
-  model$robust.p.value = model$robust.coeftest[, 'Pr(>|t|)']
-  model$robust.coefci = coefci(model, vcov. = vcovmatrix)
-  model$robust.ci.low = model$robust.coefci[, "2.5 %"]
-  model$robust.ci.high = model$robust.coefci[, "97.5 %"]
-  model
-}
-
-
-# liberals - homeless story
-hom_lib_mod<-all_data[ panel==1 & arm != 'care_base' & arm != 'care_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
-hom_lib_mod<-apply_robust_estimates(hom_lib_mod, vcovHC(hom_lib_mod))
-# conservatives - homeless story
-hom_con_mod<-all_data[ panel==2 & arm != 'care_base' & arm != 'care_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
-hom_con_mod<-apply_robust_estimates(hom_con_mod, vcovHC(hom_con_mod))
-
-# liberals - jacket story
-jac_lib_mod<-all_data[ panel==1 & arm != 'purity_base' & arm != 'purity_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
-jac_lib_mod<-apply_robust_estimates(jac_lib_mod, vcovHC(jac_lib_mod))
-# conservatives - jacket story
-jac_con_mod<-all_data[ panel==2 & arm != 'purity_base' & arm != 'purity_extension', .(ubi=as.numeric(UBI_2), panel, arm), ][, lm(ubi~arm)]
-jac_con_mod<-apply_robust_estimates(jac_con_mod, vcovHC(jac_con_mod))
-
-
-stargazer(hom_lib_mod, hom_con_mod,
-          type = 'text',
-          se = list(sqrt(diag(vcovHC(hom_lib_mod))),
-                    sqrt(diag(vcovHC(hom_con_mod)))),
-          header=F,
-          report=('v*c*sp'))
-
-
-stargazer(jac_lib_mod, jac_con_mod,
-          type = 'text', 
-          se = list(sqrt(diag(vcovHC(jac_lib_mod))),
-                    sqrt(diag(vcovHC(jac_con_mod)))),
-          header=F,
-          report=('v*c*sp'))
-
+stargazer(model_panel1$lm, model_panel2$lm
+          , type = stargazer_type, header = F
+          , se = list(model_panel1$se_robust, model_panel2$se_robust)
+          , title = "Moral Foundations Prelim Regression Specifications"
+          , column.labels = c("Panel 1", "Panel 2")
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
 ```
 
 ```{r methodology_model_1}
