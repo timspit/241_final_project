@@ -180,7 +180,7 @@ Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TB
 ### Reactions  
 
 ```{r exploratory_reactions, fig.align="center", fig.cap="Reactions"}
-results_response = results_clean %>% 
+results_response = results_clean %>%
   select(panel, arm
          , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved) %>%
