@@ -6,14 +6,14 @@ date: "December 10, 2019"
 tags: [T, B, D]
 abstract: TBD
 output:
-  pdf_document:
-    fig_caption: yes
-    number_sections: yes
+  html_document:
+    df_print: paged
     toc: yes
   md_document:
     variant: markdown
-  html_document:
-    df_print: paged
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
     toc: yes
 ---
 
@@ -101,6 +101,14 @@ results_full = results_stacked  %>%
          , open_text_reaction = q3_fc2
          # Factor variables
          , ideology = factor(polispect, levels = ideology_levels)
+         , ideology_bin = case_when(is.na(ideology) ~ "missing"
+                                    , ideology == "Very Liberal" ~ "liberal"
+                                    , ideology == "Lean Liberal" ~ "liberal"
+                                    , ideology == "Liberal" ~ "liberal"
+                                    , ideology == "Very Conservative" ~ "conservative"
+                                    , ideology == "Lean Conservative" ~ "conservative"
+                                    , ideology == "Conservative" ~ "conservative"
+                                    , TRUE ~ "moderate")
          , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
          , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
          # Numeric variables
@@ -108,7 +116,7 @@ results_full = results_stacked  %>%
 
 results_clean = results_full %>%
   select(prolific_pid, panel, arm, node
-         , ideology, age, gender, urban, employment_status, student_status
+         , ideology, ideology_bin, age, gender, urban, employment_status, student_status
          , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , open_text_reaction
@@ -323,23 +331,38 @@ stargazer(jac_lib_mod, jac_con_mod,
 
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
 # Exploratory
-model_panel1 = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(panel == 1)), clusters_in = NA)
-model_panel2 = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(panel == 2)), clusters_in = NA)
+model1_liberal = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(ideology_bin == 'liberal')), clusters_in = NA)
+model1_conservative = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(ideology_bin == 'conservative')), clusters_in = NA)
 
-stargazer(model_panel1$lm, model_panel2$lm
+stargazer(model1_liberal$lm, model1_conservative$lm
           , type = stargazer_type, header = F
-          , se = list(model_panel1$se_robust, model_panel2$se_robust)
+          , se = list(model1_liberal$se_robust, model1_conservative$se_robust)
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Panel 1", "Panel 2")
+          , column.labels = c("Liberals", "Conservative")
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
 ```
 
 ```{r methodology_model_1}
-model_1 = lm(ubi_number ~ arm+panel, data = results_full)
+model_1 = lm(ubi_number ~ arm+ideology_bin, data = results_full)
 
 stargazer(model_1, type = stargazer_type)
+```
+
+```{r random_specs}
+
+model1_liberal_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm*gender, data = results_clean %>% filter(ideology_bin == 'liberal')), clusters_in = NA)
+model1_conservative_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm*gender, data = results_clean %>% filter(ideology_bin == 'conservative')), clusters_in = NA)
+
+stargazer(model1_liberal_gender$lm, model1_conservative_gender$lm
+          , type = stargazer_type, header = F
+          , se = list(model1_liberal_gender$se_robust, model1_conservative_gender$se_robust)
+          , title = "Moral Foundations Prelim Regression Specifications"
+          , column.labels = c("Liberals", "Conservative")
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
 ```
 
 _[[Example Table]]_  
