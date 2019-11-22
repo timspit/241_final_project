@@ -256,6 +256,71 @@ my_lm_calcs = function(lm_in, clusters_in){
 }
 ```
 
+```{r}
+# Summaries
+all_data = data.table(results_full)
+all_data[ , .(ubi=mean(as.numeric(ubi_2))), by=list(panel, arm) ]
+all_data[, ideology_bin := case_when(is.na(ideology) ~ "missing",
+                                           ideology=="Very Liberal" ~ "liberal",
+                                           ideology=="Lean Liberal" ~ "liberal",
+                                           ideology=="Liberal" ~ "liberal",
+                                           ideology=="Very Conservative" ~ "conservative",
+                                           ideology=="Lean Conservative" ~ "conservative",
+                                           ideology=="Conservative" ~ "conservative",
+                                           TRUE ~ "moderate"), ]
+all_data[, story := case_when(is.na(arm) ~ "missing",
+                                           arm=="control" ~ "",
+                                           arm=="purity_base" ~ "homeless",
+                                           arm=="purity_extension" ~ "homeless-cleaned",
+                                           arm=="care_base" ~ "bullying",
+                                           arm=="care_extension" ~ "bullying-addressed",
+                                           TRUE ~ "others"), ]
+all_data[, FemaleReader := ifelse(gender!='Male', 1, 0), ]
+all_data[, ubi := as.numeric(ubi_2), ]
+```
+
+```{r}
+# augment model with results from coefteest and coefci using 
+# the supplied variance/covariance matrix
+apply_robust_estimates = function(model, vcovmatrix) {
+  model$robust.coeftest = coeftest(model, vcov. = vcovmatrix)
+  model$robust.estimate = model$robust.coeftest[, 'Estimate']
+  model$robust.std.error = model$robust.coeftest[, 'Std. Error']
+  model$robust.statistic = model$robust.coeftest[, 't value']
+  model$robust.p.value = model$robust.coeftest[, 'Pr(>|t|)']
+  model$robust.coefci = coefci(model, vcov. = vcovmatrix)
+  model$robust.ci.low = model$robust.coefci[, "2.5 %"]
+  model$robust.ci.high = model$robust.coefci[, "97.5 %"]
+  model
+}
+# liberals - homeless story
+hom_lib_mod<-all_data[ ideology_bin=='liberal' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*FemaleReader)]
+hom_lib_mod<-apply_robust_estimates(hom_lib_mod, vcovHC(hom_lib_mod))
+# conservatives - homeless story
+hom_con_mod<-all_data[ ideology_bin=='conservative' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*FemaleReader)]
+hom_con_mod<-apply_robust_estimates(hom_con_mod, vcovHC(hom_con_mod))
+# liberals - jacket story
+jac_lib_mod<-all_data[ ideology_bin=='liberal' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*FemaleReader)]
+jac_lib_mod<-apply_robust_estimates(jac_lib_mod, vcovHC(jac_lib_mod))
+# conservatives - jacket story
+jac_con_mod<-all_data[ ideology_bin=='conservative' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*FemaleReader)]
+jac_con_mod<-apply_robust_estimates(jac_con_mod, vcovHC(jac_con_mod))
+stargazer(hom_lib_mod, hom_con_mod,
+          type = 'text', 
+          se = list(sqrt(diag(vcovHC(hom_lib_mod))),
+                    sqrt(diag(vcovHC(hom_con_mod)))), 
+          header=F,
+          report=('v*c*sp'), 
+          add.lines=list(c("Ideology", "Liberal", "Conservative")))
+stargazer(jac_lib_mod, jac_con_mod,
+          type = 'text', 
+          se = list(sqrt(diag(vcovHC(jac_lib_mod))),
+                    sqrt(diag(vcovHC(jac_con_mod)))), 
+          header=F,
+          report=('v*c*sp'), 
+          add.lines=list(c("Ideology", "Liberal", "Conservative")))
+```
+
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
 # Exploratory
 model_panel1 = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(panel == 1)), clusters_in = NA)
