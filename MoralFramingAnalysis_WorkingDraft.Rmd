@@ -259,7 +259,6 @@ my_lm_calcs = function(lm_in, clusters_in){
 ```{r}
 # Summaries
 all_data = data.table(results_full)
-all_data[ , .(ubi=mean(as.numeric(ubi_2))), by=list(panel, arm) ]
 all_data[, ideology_bin := case_when(is.na(ideology) ~ "missing",
                                            ideology=="Very Liberal" ~ "liberal",
                                            ideology=="Lean Liberal" ~ "liberal",
@@ -272,11 +271,12 @@ all_data[, story := case_when(is.na(arm) ~ "missing",
                                            arm=="control" ~ "",
                                            arm=="purity_base" ~ "homeless",
                                            arm=="purity_extension" ~ "homeless-cleaned",
-                                           arm=="care_base" ~ "bullying",
-                                           arm=="care_extension" ~ "bullying-addressed",
+                                           arm=="fairness_base" ~ "bullying",
+                                           arm=="fairness_extension" ~ "bullying-addressed",
                                            TRUE ~ "others"), ]
 all_data[, FemaleReader := ifelse(gender!='Male', 1, 0), ]
 all_data[, ubi := as.numeric(ubi_2), ]
+all_data[ , .(ubi=mean(as.numeric(ubi_2)), .N), keyby=list(ideology_bin, story, FemaleReader) ]
 ```
 
 ```{r}
