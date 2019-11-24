@@ -84,8 +84,11 @@ results_full = results_stacked  %>%
                          , grepl('a', fc_c_1, ignore.case = TRUE) ~ "purity_extension"
                          , grepl('a', fc_d_1, ignore.case = TRUE) ~ "fairness_base"
                          , grepl('a', fc_e_1, ignore.case = TRUE) ~ "fairness_extension"
-                         , TRUE ~ "control") %>% factor()
+                         , TRUE ~ "control") %>% factor(levels = c("control", "purity_base", "purity_extension", "fairness_base", "fairness_extension"))
          , node = paste0(arm, "_panel_", panel)
+         , arm_level = case_when(grepl('base', arm) ~ 'base'
+                                 , grepl('extension', arm) ~ 'extension'
+                                 , TRUE ~ 'control') %>% factor(levels = c("control", "base", "extension"))
          # Combine reaction vars from different arms
          , purity_q1_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
                                  , TRUE ~ fc_c_1)
@@ -114,19 +117,18 @@ results_full = results_stacked  %>%
                                     , TRUE ~ "moderate")
          , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
          , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
-         , ubi_familiarity_bin = case_when(is.na(ubi_f) ~ "missing"
-                                    , ubi_f == "Not familiar at all" ~ "no"
-                                    , TRUE ~ "yes")
+         , ubi_familiarity_bin = case_when(ubi_f == "Not familiar at all" ~ 0
+                                    , TRUE ~ 1)
          # Numeric variables
          , ubi_number = as.numeric(ubi_2))
 
 results_clean = results_full %>%
-  select(prolific_pid, panel, arm, node
+  select(prolific_pid, panel, arm, node, arm_level
          , ideology, ideology_bin, age, gender, urban, employment_status, student_status
          , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , open_text_reaction
-         , ubi_number, ubi_group, ubi_familiarity)
+         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin)
 ```
 
 ## Exploratory Analysis  
@@ -420,35 +422,109 @@ stargazer(jac_lib_mod_2, jac_con_mod_2,
 
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot", results='asis'}
 # Exploratory
-model1_liberal = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(ideology_bin == 'liberal')), clusters_in = NA)
-model1_conservative = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(ideology_bin == 'conservative')), clusters_in = NA)
+results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
+results_armlibpure = results_clean %>% filter(ideology_bin == 'liberal' & grepl('purity|control', arm))
+results_armconfair = results_clean %>% filter(ideology_bin == 'conservative' & grepl('fairness|control', arm))
+results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
 
-stargazer(model1_liberal$lm, model1_conservative$lm
+model1_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
+model1_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
+model1_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair) , clusters_in = NA)
+model1_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpur), clusters_in = NA)
+
+stargazer(model1_libfair$lm, model1_libpure$lm
+          , model1_confair$lm, model1_conpure$lm
           , type = stargazer_type, header = F
-          , se = list(model1_liberal$se_robust, model1_conservative$se_robust)
+          , se = list(model1_libfair$se_robust, model1_libpure$se_robust
+                      , model1_confair$se_robust, model1_conpure$se_robust)
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Liberals", "Conservative")
+          , column.labels = c("Lib + Fair", "Lib + Purity"
+                              , "Con + Fair", "Con + Purity")
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
 ```
 
-```{r methodology_model_1, results='asis'}
-model_1 = lm(ubi_number ~ arm+ideology_bin, data = results_full)
-
-stargazer(model_1, type = stargazer_type)
+```{r fitted_resduals_model1, fig.width=8, fig.height=8, fig.align="center", fig.cap="Model 1 Arms 1-4 - Residuals vs. Fitted"}
+par(mfrow=c(2,2))
+which_in = 1
+plot (model1_libfair$lm, which = which_in)
+plot (model1_libpure$lm, which = which_in)
+plot (model1_confair$lm, which = which_in)
+plot (model1_conpure$lm, which = which_in)
 ```
 
-```{r random_specs, results='asis'}
+```{r coef_model1, fig.width=6, fig.height=8, fig.align="center", fig.cap="Model 1 Arms 1-4 - Coefficients"}
 
-model1_liberal_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm*gender, data = results_clean %>% filter(ideology_bin == 'liberal')), clusters_in = NA)
-model1_conservative_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm*gender, data = results_clean %>% filter(ideology_bin == 'conservative')), clusters_in = NA)
+arm_plot_df = function(model_in, group_in){
+  baseline_val = model_in$lm$coefficients[1]
+  
+  arm_plot_df = data.frame(group = rep(group_in, 3)
+                           , arm = c("control", "base", "extension")
+                           , coef = model_in$lm$coefficients
+                           , se = model_in$se_robust
+  ) %>%
+    mutate(baseline = baseline_val
+           , ubi = case_when(arm == "control" ~ coef
+                             , TRUE ~ coef + baseline))
+  
+  return(arm_plot_df)
+}
 
-stargazer(model1_liberal_gender$lm, model1_conservative_gender$lm
+arm_plot_libpure = arm_plot_df(model_in = model1_libpure, group_in = "liberal_pure")
+arm_plot_libfair = arm_plot_df(model_in = model1_libfair, group_in = "liberal_fair")
+arm_plot_conpure = arm_plot_df(model_in = model1_conpure, group_in = "conservative_pure")
+arm_plot_confair = arm_plot_df(model_in = model1_confair, group_in = "conservative_fair")
+
+con_delta_plot = ggplot() +
+  geom_point(data = arm_plot_conpure, aes(x = baseline, y = ubi, shape = group, color = arm)) + 
+  geom_point(data = arm_plot_confair, aes(x = baseline, y = ubi, shape = group, color = arm)) +
+  geom_abline(slope = 1, intercept = 0)
+
+lib_delta_plot = ggplot() +
+  geom_point(data = arm_plot_libpure, aes(x = baseline, y = ubi, shape = group, color = arm)) +
+  geom_point(data = arm_plot_libfair, aes(x = baseline, y = ubi, shape = group, color = arm)) +
+  geom_abline(slope = 1, intercept = 0)
+
+grid.arrange(con_delta_plot, lib_delta_plot
+             , nrow = 2)
+```
+
+```{r methodology_model_1, results='asis'}
+
+model1_libfair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibfair), clusters_in = NA)
+model1_libpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibpure), clusters_in = NA)
+model1_confair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armconfair) , clusters_in = NA)
+model1_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armconpur), clusters_in = NA)
+
+stargazer(model1_libfair_gender$lm, model1_libpure_gender$lm
+          , model1_confair_gender$lm, model1_conpure_gender$lm
           , type = stargazer_type, header = F
-          , se = list(model1_liberal_gender$se_robust, model1_conservative_gender$se_robust)
+          , se = list(model1_libfair_gender$se_robust, model1_libpure_gender$se_robust
+                      , model1_confair_gender$se_robust, model1_conpure_gender$se_robust)
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Liberals", "Conservative")
+          , column.labels = c("Lib + Fair", "Lib + Purity"
+                              , "Con + Fair", "Con + Purity")
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
+```
+
+```{r methodology_model_1_ideology, results='asis'}
+
+model1_libfair_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armlibfair), clusters_in = NA)
+model1_libpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armlibpure), clusters_in = NA)
+model1_confair_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armconfair) , clusters_in = NA)
+model1_conpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armconpur), clusters_in = NA)
+
+stargazer(model1_libfair_familiarity$lm, model1_libpure_familiarity$lm
+          , model1_confair_familiarity$lm, model1_conpure_familiarity$lm
+          , type = stargazer_type, header = F
+          , se = list(model1_libfair_familiarity$se_robust, model1_libpure_familiarity$se_robust
+                      , model1_confair_familiarity$se_robust, model1_conpure_familiarity$se_robust)
+          , title = "Moral Foundations Prelim Regression Specifications"
+          , column.labels = c("Lib + Fair", "Lib + Purity"
+                              , "Con + Fair", "Con + Purity")
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
@@ -458,7 +534,7 @@ _[[Example Table]]_
 
 | Model | Specification | Interpretation | Figure |
 | :--- | :------ | :-------- | :--- |
-| Model 1 | _crmrte~prbarr_ | $\Delta crmrte = \beta_1 \Delta prbarr$ | _\autoref{fig:model_1_fitplots}_ |
+| Model 1 | _ubinumber~armlevel_ | $\Delta armlevel = \beta_1 \Delta ubinumber$ | _\autoref{fig:model_1_fitplots}_ |
 
 ```{r methodology_model_1_final, results='asis', fig.cap="\\label{fig:model_1_final}"}
 # Stargazer
@@ -494,7 +570,31 @@ _[[TBD]]_
 
 | Variable Name | Variable | Values | Source | Notes |
 | :---- | :-------- | :-------- | :---------- | :----- |
-| county | County ID | Odd Integers || Few missing |
+| prolific_pid |||||
+| panel |||||
+| arm |||||
+| node |||||
+| arm_level |||||
+| ideology |||||
+| ideology_bin |||||
+| age |||||
+| gender |||||
+| urban |||||
+| employment_status |||||
+| student_status |||||
+| purity_q1_self |||||
+| purity_q2_repulsed |||||
+| purity_q3_injustice |||||
+| purity_q4_relieved |||||
+| fairness_q1_self |||||
+| fairness_q2_pain |||||
+| fairness_q3_injustice |||||
+| fairness_q4_relieved |||||
+| open_text_reaction |||||
+| ubi_number | UBI Number | Integer 0-10 |||
+| ubi_group |||||
+| ubi_familiarity |||||
+| ubi_familiarity_bin |||||
 
 \pagebreak
 
