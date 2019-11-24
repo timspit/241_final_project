@@ -111,6 +111,9 @@ results_full = results_stacked  %>%
                                     , TRUE ~ "moderate")
          , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
          , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
+         , ubi_familiarity_bin = case_when(is.na(ubi_f) ~ "missing"
+                                    , ubi_f == "Not familiar at all" ~ "no"
+                                    , TRUE ~ "yes")
          # Numeric variables
          , ubi_number = as.numeric(ubi_2))
 
@@ -283,6 +286,7 @@ all_data[, story := case_when(is.na(arm) ~ "missing",
                                            arm=="fairness_extension" ~ "bullying-addressed",
                                            TRUE ~ "others"), ]
 all_data[, FemaleReader := ifelse(gender!='Male', 1, 0), ]
+all_data[, ubi_familiarity_dummy := ifelse(ubi_familiarity_bin!='yes', 1, 0), ]
 all_data[, ubi := as.numeric(ubi_2), ]
 all_data[ , .(ubi=mean(as.numeric(ubi_2)), .N), keyby=list(ideology_bin, story, FemaleReader) ]
 ```
@@ -324,6 +328,37 @@ stargazer(jac_lib_mod, jac_con_mod,
           type = 'text', 
           se = list(sqrt(diag(vcovHC(jac_lib_mod))),
                     sqrt(diag(vcovHC(jac_con_mod)))), 
+          header=F,
+          report=('v*c*sp'), 
+          add.lines=list(c("Ideology", "Liberal", "Conservative")))
+```
+
+```{r}
+# augment model with results from coefteest and coefci using 
+# the supplied variance/covariance matrix
+# liberals - homeless story
+hom_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_dummy)]
+hom_lib_mod_2<-apply_robust_estimates(hom_lib_mod_2, vcovHC(hom_lib_mod_2))
+# conservatives - homeless story
+hom_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_dummy)]
+hom_con_mod_2<-apply_robust_estimates(hom_con_mod_2, vcovHC(hom_con_mod_2))
+# liberals - jacket story
+jac_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_dummy)]
+jac_lib_mod_2<-apply_robust_estimates(jac_lib_mod_2, vcovHC(jac_lib_mod_2))
+# conservatives - jacket story
+jac_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_dummy)]
+jac_con_mod_2<-apply_robust_estimates(jac_con_mod_2, vcovHC(jac_con_mod_2))
+stargazer(hom_lib_mod_2, hom_con_mod_2,
+          type = 'text', 
+          se = list(sqrt(diag(vcovHC(hom_lib_mod_2))),
+                    sqrt(diag(vcovHC(hom_con_mod_2)))), 
+          header=F,
+          report=('v*c*sp'), 
+          add.lines=list(c("Ideology", "Liberal", "Conservative")))
+stargazer(jac_lib_mod_2, jac_con_mod_2,
+          type = 'text', 
+          se = list(sqrt(diag(vcovHC(jac_lib_mod_2))),
+                    sqrt(diag(vcovHC(jac_con_mod_2)))), 
           header=F,
           report=('v*c*sp'), 
           add.lines=list(c("Ideology", "Liberal", "Conservative")))
