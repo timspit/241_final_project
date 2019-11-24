@@ -6,14 +6,14 @@ date: "December 10, 2019"
 tags: [T, B, D]
 abstract: TBD
 output:
-  html_document:
-    df_print: paged
-    toc: yes
-  md_document:
-    variant: markdown
   pdf_document:
     fig_caption: yes
     number_sections: yes
+    toc: yes
+  md_document:
+    variant: markdown
+  html_document:
+    df_print: paged
     toc: yes
 ---
 
@@ -28,7 +28,10 @@ packages = c('openxlsx'
              , 'knitr')
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "text" # change to latex when ready to knit
+# install.packages("webshot")
+# webshot::install_phantomjs()
+
+stargazer_type = "latex" # change to latex when ready to knit
 ```
 
 \pagebreak
@@ -132,30 +135,69 @@ _[[TBD]]_
 ### Study Setup  
 
 ```{r exploratory, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Setup"}
-arm_counts = results_clean %>%
+arm_counts_bypanel = results_clean %>%
   group_by(arm, panel, node) %>%
   summarise(count = n())
+arm_counts_all = results_clean %>%
+  group_by(arm) %>%
+  summarise(count = n())
+
+# nodes = data.frame(
+#   id = 1:12
+#   , group = c("liberal", "conservative", arm_counts$arm)
+#   # , label = c("liberal", "conservative", arm_counts$node)
+#   , label = c("All Liberals", "All Conservatives"
+#               , "Control: Liberal", "Control: Conservative"
+#               , "Fairness Base: Liberal", "Fairness Base: Conservative"
+#               , "Fairness Extension: Liberal", "Fairness Extension: Conservative"
+#               , "Purity Base: Liberal", "Purity Base: Conservative"
+#               , "Purity Extension: Liberal", "Purity Extension: Conservative") 
+#   , value = c(sum(arm_counts$count[arm_counts$panel==1]), sum(arm_counts$count[arm_counts$panel==2]), arm_counts$count)
+#   , shape = rep("box", 12)
+#     # color, shape
+#   )
+# 
+# edges = data.frame(
+#   from = c(1, 2, 1, 2, 1, 2,  5, 6, 9,  10)
+#   , to = c(3, 4, 5, 6, 9, 10, 7, 8, 11, 12)
+#   , dashes = c(rep(FALSE, 6), rep(TRUE, 4))
+#   )
 
 nodes = data.frame(
-  id = 1:12
-  , group = c("liberal", "conservative", arm_counts$arm)
-  , label = c("liberal", "conservative", arm_counts$node)
-  , value = c(sum(arm_counts$count[arm_counts$panel==1]), sum(arm_counts$count[arm_counts$panel==2]), arm_counts$count)
-  # color, title, shape
+  id = 1:7
+  , group = c("ideology", "ideology"
+              , "fairness", "fairness"
+              , "purity", "purity"
+              , "control"
+              )
+  # , label = c("liberal", "conservative", arm_counts$node)
+  , label = c("All Liberals", "All Conservatives"
+              , "Fairness Base"
+              , "Fairness Extension"
+              , "Purity Base"
+              , "Purity Extension"
+              , "Control"
+  )
+  , level = c(1, 1, 2, 3, 2, 3, 2)
+  # , mass = c(sum(arm_counts_bypanel$count[arm_counts_bypanel$panel==1])
+  #             , sum(arm_counts_bypanel$count[arm_counts_bypanel$panel==2]), arm_counts_all$count)
+  , shape = rep("box", 7)
   )
 
 edges = data.frame(
-  from = c(1, 2, 1, 2, 1, 2,  5, 6, 9,  10)
-  , to = c(3, 4, 5, 6, 9, 10, 7, 8, 11, 12)
+  from = c(1, 2, 1, 2, 1, 2, 3, 5)
+  , to = c(3, 3, 5, 5, 7, 7, 4, 6)
+  , dashes = c(rep(FALSE, 6), rep(TRUE, 2))
   )
 
 visNetwork(nodes, edges) %>%
-  visHierarchicalLayout()
+  visEdges(arrows = "to") %>% 
+  visHierarchicalLayout(direction = "LR") 
 ```
 
 ### Demographics  
 
-```{r exploratory_demographics, fig.align="center", fig.cap="Demographics"}
+```{r exploratory_demographics, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
 
 grpstackbar_plot = ggplot() +
   facet_grid( ~ panel) +
@@ -163,47 +205,55 @@ grpstackbar_plot = ggplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Ideology
-grpstackbar_plot +
+plot_ideology = grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(ideology, panel) %>% summarise(count = n())
            , aes(x = ideology, y = count, fill = ideology)
-           , stat = "identity")
+           , stat = "identity") + 
+  theme(legend.position = "left", axis.text.x=element_blank())
 # Age
-grpstackbar_plot +
+plot_age = grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(age, ideology, panel) %>% summarise(count = n())
            , aes(x = age, y = count, fill = ideology)
-           , stat = "identity")
+           , stat = "identity", show.legend = FALSE)
 
 # Gender
-grpstackbar_plot +
+plot_gender = grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(gender, ideology, panel) %>% summarise(count = n())
            , aes(x = gender, y = count, fill = ideology)
-           , stat = "identity")
+           , stat = "identity", show.legend = FALSE)
 
 # Urban
-grpstackbar_plot +
+plot_urban = grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(urban, ideology, panel) %>% summarise(count = n())
            , aes(x = urban, y = count, fill = ideology)
-           , stat = "identity")
+           , stat = "identity", show.legend = FALSE)
+
+grid.arrange(plot_ideology, plot_age
+             , plot_gender, plot_urban
+             , nrow = 2)
 ```
 
 Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TBD]]_   
 
 ### Reactions  
 
-```{r exploratory_reactions, fig.align="center", fig.cap="Reactions"}
+```{r exploratory_reactions, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
+response_levels = c("A great deal", "A lot", "A moderate amount", "A little", "None at all")
+
 results_response = results_clean %>%
   select(panel, arm
          , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved) %>%
   gather(prompt, value, -panel, -arm) %>%
   filter(!is.na(value)) %>%
-  group_by(panel, arm, prompt, value) %>% summarise(count = n()) #%>%
+  group_by(panel, arm, prompt, value) %>% summarise(count = n()) %>%
+  mutate(response = factor(value, levels = response_levels))
   # spread(value, count) %>%
   # arrange(panel, arm, prompt) %>%
   # select("panel", "arm", "prompt", "A great deal", "A lot", "A moderate amount", "A little", "None at all")
 
 ggplot(data = results_response
-       , aes(x = prompt, y = value, fill = count)) +
+       , aes(x = prompt, y = response, fill = count)) +
   geom_tile() +
   facet_grid(rows = vars(arm), cols = vars(panel)) +
   scale_fill_distiller(direction = 1) +
@@ -212,21 +262,25 @@ ggplot(data = results_response
 
 ### Outcome  
 
-```{r exploratory_outcome, fig.align="center", fig.cap="Outcomes"}
+```{r exploratory_outcome, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Outcomes"}
 # Histogram of familiarity
-ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology, panel) %>% summarise(count = n())
+plot_familiarity = ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology, panel) %>% summarise(count = n())
        , aes(x = ubi_familiarity, y = count, fill = ideology)) +
-  geom_bar(stat="identity") +
+  geom_bar(stat="identity", show.legend = FALSE) +
   facet_grid( ~ panel) +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Heat map of number UBI like
-ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number))
+plot_ubi = ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number))
        , aes(x = ubi_familiarity, y = ideology, fill = ubi_number_avg)) +
   geom_tile() +
   scale_fill_distiller(direction = 1) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)
+        , legend.position = "right")
+
+grid.arrange(plot_familiarity, plot_ubi
+              , nrow = 2)
 ```
 
 \pagebreak
@@ -364,7 +418,7 @@ stargazer(jac_lib_mod_2, jac_con_mod_2,
           add.lines=list(c("Ideology", "Liberal", "Conservative")))
 ```
 
-```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot"}
+```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot", results='asis'}
 # Exploratory
 model1_liberal = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(ideology_bin == 'liberal')), clusters_in = NA)
 model1_conservative = my_lm_calcs(lm_in = lm(ubi_number ~ arm, data = results_clean %>% filter(ideology_bin == 'conservative')), clusters_in = NA)
@@ -379,13 +433,13 @@ stargazer(model1_liberal$lm, model1_conservative$lm
 )
 ```
 
-```{r methodology_model_1}
+```{r methodology_model_1, results='asis'}
 model_1 = lm(ubi_number ~ arm+ideology_bin, data = results_full)
 
 stargazer(model_1, type = stargazer_type)
 ```
 
-```{r random_specs}
+```{r random_specs, results='asis'}
 
 model1_liberal_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm*gender, data = results_clean %>% filter(ideology_bin == 'liberal')), clusters_in = NA)
 model1_conservative_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm*gender, data = results_clean %>% filter(ideology_bin == 'conservative')), clusters_in = NA)
