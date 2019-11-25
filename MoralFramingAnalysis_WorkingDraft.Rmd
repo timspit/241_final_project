@@ -44,9 +44,9 @@ _[[TBD]]_
 
 ```{r import}
 results_panel1_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 20, 2019_07.25.xlsx") %>% filter(!grepl("Start|Import", StartDate))
-results_panel2_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 20, 2019_07.26.xlsx") %>% filter(!grepl("Start|Import", StartDate))
+results_panel2_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 24, 2019_21.30.xlsx") %>% filter(!grepl("Start|Import", StartDate))
 results_10femctrl_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control_November 22, 2019_17.34.xlsx") %>% filter(!grepl("Start|Import", StartDate))
-participant_detail_panel1 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1.csv", stringsAsFactors = FALSE)
+participant_detail_panel1 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1-with_November_24_2019.csv", stringsAsFactors = FALSE)
 participant_detail_panel2 = read.csv("./data/study/prolific_export_5dd4a34135582248315dfdca.csv", stringsAsFactors = FALSE)
 participant_detail_10femctrl = read.csv("./data/study/prolific_export_5dd86d9f8f45b98265115ada.csv", stringsAsFactors = FALSE)
 ```
@@ -356,7 +356,7 @@ all_data[, story := case_when(is.na(arm) ~ "missing",
 all_data[, FemaleReader := ifelse(gender!='Male', 1, 0), ]
 all_data[, ubi_familiarity_dummy := ifelse(ubi_familiarity_bin!='yes', 1, 0), ]
 all_data[, ubi := as.numeric(ubi_2), ]
-all_data[ , .(ubi=mean(as.numeric(ubi_2)), .N), keyby=list(ideology_bin, story, FemaleReader) ]
+all_data[ , .(ubi=mean(as.numeric(ubi_2)), .N), keyby=list(ideology_bin, story, FemaleReader, ubi_familiarity_bin) ]
 ```
 
 ```{r}
@@ -405,16 +405,16 @@ stargazer(jac_lib_mod, jac_con_mod,
 # augment model with results from coefteest and coefci using 
 # the supplied variance/covariance matrix
 # liberals - homeless story
-hom_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_dummy)]
+hom_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_bin)]
 hom_lib_mod_2<-apply_robust_estimates(hom_lib_mod_2, vcovHC(hom_lib_mod_2))
 # conservatives - homeless story
-hom_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_dummy)]
+hom_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_bin)]
 hom_con_mod_2<-apply_robust_estimates(hom_con_mod_2, vcovHC(hom_con_mod_2))
 # liberals - jacket story
-jac_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_dummy)]
+jac_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_bin)]
 jac_lib_mod_2<-apply_robust_estimates(jac_lib_mod_2, vcovHC(jac_lib_mod_2))
 # conservatives - jacket story
-jac_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_dummy)]
+jac_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_bin)]
 jac_con_mod_2<-apply_robust_estimates(jac_con_mod_2, vcovHC(jac_con_mod_2))
 stargazer(hom_lib_mod_2, hom_con_mod_2,
           type = 'text', 
