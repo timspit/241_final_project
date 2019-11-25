@@ -31,7 +31,7 @@ lapply(packages, library, character.only = TRUE)
 # install.packages("webshot")
 # webshot::install_phantomjs()
 
-stargazer_type = "latex" # change to latex when ready to knit
+stargazer_type = "text" # change to latex when ready to knit
 ```
 
 \pagebreak
@@ -43,17 +43,12 @@ _[[TBD]]_
 _[[TBD]]_  
 
 ```{r import}
-# Pilot
-# results_panel1_raw = read.xlsx("./data/pilot/survey_results_pilot_panel1.xlsx") %>% filter(StartDate != "Start Date")
-# results_panel2_raw = read.xlsx("./data/pilot/survey_results_pilot_panel2.xlsx") %>% filter(StartDate != "Start Date")
-# participant_detail_panel1 = read.csv("./data/pilot/participant_detail_pilot_panel1.csv", stringsAsFactors = FALSE)
-# participant_detail_panel2 = read.csv("./data/pilot/participant_detail_pilot_panel2.csv", stringsAsFactors = FALSE)
-
-# Study
 results_panel1_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 20, 2019_07.25.xlsx") %>% filter(!grepl("Start|Import", StartDate))
 results_panel2_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 20, 2019_07.26.xlsx") %>% filter(!grepl("Start|Import", StartDate))
+results_10femctrl_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control_November 22, 2019_17.34.xlsx") %>% filter(!grepl("Start|Import", StartDate))
 participant_detail_panel1 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1.csv", stringsAsFactors = FALSE)
 participant_detail_panel2 = read.csv("./data/study/prolific_export_5dd4a34135582248315dfdca.csv", stringsAsFactors = FALSE)
+participant_detail_10femctrl = read.csv("./data/study/prolific_export_5dd86d9f8f45b98265115ada.csv", stringsAsFactors = FALSE)
 ```
 
 ### Data Cleaning  
@@ -64,8 +59,12 @@ _[[TBD]]_  [^1]
 ```{r data_cleaning}
 # Stack panel data
 results_stacked = bind_rows(results_panel1_raw %>% mutate(panel = 1)
-                            , results_panel2_raw %>% mutate(panel = 2)) %>%
-  merge(bind_rows(participant_detail_panel1, participant_detail_panel2) %>% select(-session_id, -status, -age)
+                            , results_panel2_raw %>% mutate(panel = 2)
+                            , results_10femctrl_raw %>% mutate(panel = 2)) %>%
+  merge(bind_rows(participant_detail_panel1
+                  , participant_detail_panel2
+                  , participant_detail_10femctrl) %>% 
+          select(-session_id, -status, -age)
         , by.x = "PROLIFIC_PID"
         , by.y = "participant_id"
         , all.x = TRUE)
@@ -129,6 +128,26 @@ results_clean = results_full %>%
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , open_text_reaction
          , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin)
+
+results_clean = results_clean %>% mutate(
+  purity_q2_repulsed_bin = case_when(is.na(purity_q2_repulsed) ~ NA_real_
+                                     , purity_q2_repulsed %in% c("None at all", "A little") ~ 0
+                                     , purity_q2_repulsed %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                     , TRUE ~ NA_real_)
+  , purity_q4_relieved_bin = case_when(is.na(purity_q4_relieved) ~ NA_real_
+                                       , purity_q4_relieved %in% c("None at all", "A little") ~ 0
+                                       , purity_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                       , TRUE ~ NA_real_)
+  , fairness_q2_pain_bin = case_when(is.na(fairness_q2_pain) ~ NA_real_
+                                     , fairness_q2_pain %in% c("None at all", "A little") ~ 0
+                                     , fairness_q2_pain %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                     , TRUE ~ NA_real_)
+  , fairness_q4_relieved_bin = case_when(is.na(fairness_q4_relieved) ~ NA_real_
+                                         , fairness_q4_relieved %in% c("None at all", "A little") ~ 0
+                                         , fairness_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                         , TRUE ~ NA_real_)
+)
+
 ```
 
 ## Exploratory Analysis  
@@ -140,55 +159,32 @@ _[[TBD]]_
 arm_counts_bypanel = results_clean %>%
   group_by(arm, panel, node) %>%
   summarise(count = n())
-arm_counts_all = results_clean %>%
-  group_by(arm) %>%
-  summarise(count = n())
-
-# nodes = data.frame(
-#   id = 1:12
-#   , group = c("liberal", "conservative", arm_counts$arm)
-#   # , label = c("liberal", "conservative", arm_counts$node)
-#   , label = c("All Liberals", "All Conservatives"
-#               , "Control: Liberal", "Control: Conservative"
-#               , "Fairness Base: Liberal", "Fairness Base: Conservative"
-#               , "Fairness Extension: Liberal", "Fairness Extension: Conservative"
-#               , "Purity Base: Liberal", "Purity Base: Conservative"
-#               , "Purity Extension: Liberal", "Purity Extension: Conservative") 
-#   , value = c(sum(arm_counts$count[arm_counts$panel==1]), sum(arm_counts$count[arm_counts$panel==2]), arm_counts$count)
-#   , shape = rep("box", 12)
-#     # color, shape
-#   )
-# 
-# edges = data.frame(
-#   from = c(1, 2, 1, 2, 1, 2,  5, 6, 9,  10)
-#   , to = c(3, 4, 5, 6, 9, 10, 7, 8, 11, 12)
-#   , dashes = c(rep(FALSE, 6), rep(TRUE, 4))
-#   )
 
 nodes = data.frame(
-  id = 1:7
+  id = 1:8
   , group = c("ideology", "ideology"
               , "fairness", "fairness"
               , "purity", "purity"
               , "control"
+              , "treatment"
               )
-  # , label = c("liberal", "conservative", arm_counts$node)
   , label = c("All Liberals", "All Conservatives"
               , "Fairness Base"
               , "Fairness Extension"
               , "Purity Base"
               , "Purity Extension"
               , "Control"
+              , "Treatment"
   )
-  , level = c(1, 1, 2, 3, 2, 3, 2)
+  , level = c(1, 1, 3, 4, 3, 4, 2, 2)
   # , mass = c(sum(arm_counts_bypanel$count[arm_counts_bypanel$panel==1])
   #             , sum(arm_counts_bypanel$count[arm_counts_bypanel$panel==2]), arm_counts_all$count)
-  , shape = rep("box", 7)
+  , shape = rep("box", 8)
   )
 
 edges = data.frame(
-  from = c(1, 2, 1, 2, 1, 2, 3, 5)
-  , to = c(3, 3, 5, 5, 7, 7, 4, 6)
+  from = c(1, 2, 1, 2, 8, 8, 3, 5)
+  , to = c(7, 7, 8, 8, 3, 5, 4, 6)
   , dashes = c(rep(FALSE, 6), rep(TRUE, 2))
   )
 
@@ -211,7 +207,7 @@ plot_ideology = grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(ideology, panel) %>% summarise(count = n())
            , aes(x = ideology, y = count, fill = ideology)
            , stat = "identity") + 
-  theme(legend.position = "left", axis.text.x=element_blank())
+  theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
 # Age
 plot_age = grpstackbar_plot +
   geom_bar(data = results_clean %>%  group_by(age, ideology, panel) %>% summarise(count = n())
@@ -250,9 +246,6 @@ results_response = results_clean %>%
   filter(!is.na(value)) %>%
   group_by(panel, arm, prompt, value) %>% summarise(count = n()) %>%
   mutate(response = factor(value, levels = response_levels))
-  # spread(value, count) %>%
-  # arrange(panel, arm, prompt) %>%
-  # select("panel", "arm", "prompt", "A great deal", "A lot", "A moderate amount", "A little", "None at all")
 
 ggplot(data = results_response
        , aes(x = prompt, y = response, fill = count)) +
@@ -260,6 +253,25 @@ ggplot(data = results_response
   facet_grid(rows = vars(arm), cols = vars(panel)) +
   scale_fill_distiller(direction = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r exploratory_reactions_bin, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions (Bin)"}
+results_response_bin = results_clean %>%
+  select(ideology_bin, arm
+         , purity_q2_repulsed_bin, purity_q4_relieved_bin
+         , fairness_q2_pain_bin, fairness_q4_relieved_bin) %>%
+  gather(prompt, value, -ideology_bin, -arm) %>%
+  filter(!is.na(value)) %>%
+  group_by(ideology_bin, arm, prompt, value) %>% summarise(count = n())
+
+ggplot(data = results_response_bin
+       , aes(x = prompt, y = value, fill = count)) +
+  geom_tile() +
+  facet_grid(rows = vars(arm), cols = vars(ideology_bin)) +
+  scale_fill_distiller(direction = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# One for Libs/Cons
 ```
 
 ### Outcome  
@@ -275,7 +287,7 @@ plot_familiarity = ggplot(data = results_clean %>% group_by(ubi_familiarity, ide
 
 # Heat map of number UBI like
 plot_ubi = ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number))
-       , aes(x = ubi_familiarity, y = ideology, fill = ubi_number_avg)) +
+       , aes(x = ideology, y = ubi_familiarity, fill = ubi_number_avg)) +
   geom_tile() +
   scale_fill_distiller(direction = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)
@@ -447,14 +459,14 @@ stargazer(model1_libfair$lm, model1_libpure$lm
 
 ```{r fitted_resduals_model1, fig.width=8, fig.height=8, fig.align="center", fig.cap="Model 1 Arms 1-4 - Residuals vs. Fitted"}
 par(mfrow=c(2,2))
-which_in = 1
+which_in = 2
 plot (model1_libfair$lm, which = which_in)
 plot (model1_libpure$lm, which = which_in)
 plot (model1_confair$lm, which = which_in)
 plot (model1_conpure$lm, which = which_in)
 ```
 
-```{r coef_model1, fig.width=6, fig.height=8, fig.align="center", fig.cap="Model 1 Arms 1-4 - Coefficients"}
+```{r coef_model1, fig.width=6, fig.height=4, fig.align="center", fig.cap="Model 1 Arms 1-4 - Coefficients"}
 
 arm_plot_df = function(model_in, group_in){
   baseline_val = model_in$lm$coefficients[1]
@@ -476,21 +488,15 @@ arm_plot_libfair = arm_plot_df(model_in = model1_libfair, group_in = "liberal_fa
 arm_plot_conpure = arm_plot_df(model_in = model1_conpure, group_in = "conservative_pure")
 arm_plot_confair = arm_plot_df(model_in = model1_confair, group_in = "conservative_fair")
 
-con_delta_plot = ggplot() +
-  geom_point(data = arm_plot_conpure, aes(x = baseline, y = ubi, shape = group, color = arm)) + 
-  geom_point(data = arm_plot_confair, aes(x = baseline, y = ubi, shape = group, color = arm)) +
+ggplot() +
+  geom_point(data = arm_plot_libpure, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) +
+  geom_point(data = arm_plot_libfair, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) +
+  geom_point(data = arm_plot_conpure, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) + 
+  geom_point(data = arm_plot_confair, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) +
   geom_abline(slope = 1, intercept = 0)
-
-lib_delta_plot = ggplot() +
-  geom_point(data = arm_plot_libpure, aes(x = baseline, y = ubi, shape = group, color = arm)) +
-  geom_point(data = arm_plot_libfair, aes(x = baseline, y = ubi, shape = group, color = arm)) +
-  geom_abline(slope = 1, intercept = 0)
-
-grid.arrange(con_delta_plot, lib_delta_plot
-             , nrow = 2)
 ```
 
-```{r methodology_model_1, results='asis'}
+```{r methodology_model_1_gender, results='asis'}
 
 model1_libfair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibfair), clusters_in = NA)
 model1_libpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibpure), clusters_in = NA)
@@ -510,7 +516,7 @@ stargazer(model1_libfair_gender$lm, model1_libpure_gender$lm
 )
 ```
 
-```{r methodology_model_1_ideology, results='asis'}
+```{r methodology_model_1_familiarity, results='asis'}
 
 model1_libfair_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armlibfair), clusters_in = NA)
 model1_libpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armlibpure), clusters_in = NA)
