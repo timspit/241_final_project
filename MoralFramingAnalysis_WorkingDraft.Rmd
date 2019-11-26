@@ -44,7 +44,7 @@ _[[TBD]]_
 
 ```{r import}
 results_panel1_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 20, 2019_07.25.xlsx") %>% filter(!grepl("Start|Import", StartDate))
-results_panel2_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 24, 2019_21.30.xlsx") %>% filter(!grepl("Start|Import", StartDate))
+results_panel2_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 24, 2019_21.30_removedups.xlsx") %>% filter(!grepl("Start|Import", StartDate))
 results_10femctrl_raw = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control_November 22, 2019_17.34.xlsx") %>% filter(!grepl("Start|Import", StartDate))
 participant_detail_panel1 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1-with_November_24_2019.csv", stringsAsFactors = FALSE)
 participant_detail_panel2 = read.csv("./data/study/prolific_export_5dd4a34135582248315dfdca.csv", stringsAsFactors = FALSE)
@@ -57,17 +57,19 @@ _[[TBD]]_  [^1]
 [^1]: _[[Example footnote]]_  
 
 ```{r data_cleaning}
-# Stack panel data
+# Stack panel data (309 obs x 80 vars)
 results_stacked = bind_rows(results_panel1_raw %>% mutate(panel = 1)
                             , results_panel2_raw %>% mutate(panel = 2)
                             , results_10femctrl_raw %>% mutate(panel = 2)) %>%
   merge(bind_rows(participant_detail_panel1
                   , participant_detail_panel2
                   , participant_detail_10femctrl) %>% 
-          select(-session_id, -status, -age)
+          select(-session_id, -status, -age) %>%
+          distinct(participant_id, .keep_all= TRUE)
         , by.x = "PROLIFIC_PID"
         , by.y = "participant_id"
-        , all.x = TRUE)
+        , all.x = TRUE) %>%
+  distinct(PROLIFIC_PID, .keep_all= TRUE) # (305 obs by 80 vars)
 
 # Adjust all variable names to remove '-' and '.' + lowercase
 names(results_stacked) = tolower(gsub(x = names(results_stacked), pattern = "\\-|\\.", replacement = "_"))
