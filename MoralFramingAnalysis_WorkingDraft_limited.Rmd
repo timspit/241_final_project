@@ -28,6 +28,7 @@ packages = c('openxlsx'
              , 'knitr')
 lapply(packages, library, character.only = TRUE)
 
+#### Uncomment and install if knitting to PDF ###
 # install.packages("webshot")
 # webshot::install_phantomjs()
 
@@ -42,7 +43,7 @@ _[[TBD]]_
 # Data  
 _[[TBD]]_  
 
-```{r import}
+```{r import, include = FALSE}
 results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 20, 2019_07.25.csv", stringsAsFactors = FALSE) %>%   filter(!grepl("Start|Import", StartDate)) %>% 
   mutate(panel = 1)
 results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control_November 22, 2019_17.34.csv", stringsAsFactors = FALSE) %>% 
@@ -51,9 +52,6 @@ results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recrui
 results_raw_panel2_nov20 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 20, 2019_07.26.csv", stringsAsFactors = FALSE) %>% 
   filter(!grepl("Start|Import", StartDate)) %>% 
   mutate(panel = 2)
-# results_raw_panel2_nov24 = read.xlsx("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 24, 2019_21.30.xlsx") %>% 
-#   filter(!grepl("Start|Import", StartDate)) %>% 
-#   mutate(panel = 2)
 results_raw_panel2_nov26 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 26, 2019_07.51.csv", stringsAsFactors = FALSE) %>% 
   filter(!grepl("Start|Import", StartDate)) %>% 
   mutate(panel = 2)
@@ -65,7 +63,7 @@ participant_detail_4 = read.csv("./data/study/prolific_export_5dd4a350108b6748b2
 participant_detail_5 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1-up-to_November_26_2019.csv", stringsAsFactors = FALSE)
 ```
 
-```{r deduplicate}
+```{r deduplicate, include = FALSE}
 # Stack panel data (509 obs x 63 vars)
 results_stacked = bind_rows(results_raw_panel1
                             , results_raw_panel2_10fem
@@ -126,7 +124,7 @@ _[[TBD]]_  [^1]
 
 [^1]: _[[Example footnote]]_  
 
-```{r data_cleaning}
+```{r data_cleaning, include = FALSE}
 # Adjust all variable names to remove '-' and '.' + lowercase
 names(results_full_dedup) = tolower(gsub(x = names(results_full_dedup), pattern = "\\-|\\.", replacement = "_"))
 
@@ -148,6 +146,7 @@ results_full = results_full_dedup  %>%
                                  , TRUE ~ 'control') %>% factor(levels = c("control", "base", "extension"))
          # Combine reaction vars from different arms
          , purity_q1_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
+                                 # , grepl('a', fc_c_1, ignore.case = TRUE) ~ fc_c_1
                                  , TRUE ~ fc_c_1)
          , purity_q2_repulsed = case_when(grepl('a', fc_b_2, ignore.case = TRUE) ~ fc_b_2
                                  , TRUE ~ fc_c_2)
@@ -206,6 +205,11 @@ results_clean = results_clean %>% mutate(
                                          , TRUE ~ NA_real_)
 )
 
+# Subset for arms (including control in each)
+results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
+results_armlibpure = results_clean %>% filter(ideology_bin == 'liberal' & grepl('purity|control', arm))
+results_armconfair = results_clean %>% filter(ideology_bin == 'conservative' & grepl('fairness|control', arm))
+results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
 ```
 
 ## Exploratory Analysis  
@@ -213,7 +217,7 @@ _[[TBD]]_
 
 ### Study Setup  
 
-```{r exploratory, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Setup"}
+```{r exploratory, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Setup"}
 arm_counts_bypanel = results_clean %>%
   group_by(arm, panel, node) %>%
   summarise(count = n())
@@ -235,8 +239,6 @@ nodes = data.frame(
               , "Treatment"
   )
   , level = c(1, 1, 3, 4, 3, 4, 2, 2)
-  # , mass = c(sum(arm_counts_bypanel$count[arm_counts_bypanel$panel==1])
-  #             , sum(arm_counts_bypanel$count[arm_counts_bypanel$panel==2]), arm_counts_all$count)
   , shape = rep("box", 8)
   )
 
@@ -253,34 +255,34 @@ visNetwork(nodes, edges) %>%
 
 ### Demographics  
 
-```{r exploratory_demographics, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
+```{r exploratory_demographics, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
 
 grpstackbar_plot = ggplot() +
-  facet_grid( ~ panel) +
+  facet_grid( ~ ideology_bin) +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Ideology
 plot_ideology = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(ideology, panel) %>% summarise(count = n())
+  geom_bar(data = results_clean %>%  group_by(ideology, ideology_bin) %>% summarise(count = n())
            , aes(x = ideology, y = count, fill = ideology)
            , stat = "identity") + 
   theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
 # Age
 plot_age = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(age, ideology, panel) %>% summarise(count = n())
+  geom_bar(data = results_clean %>%  group_by(age, ideology, ideology_bin) %>% summarise(count = n())
            , aes(x = age, y = count, fill = ideology)
            , stat = "identity", show.legend = FALSE)
 
 # Gender
 plot_gender = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(gender, ideology, panel) %>% summarise(count = n())
+  geom_bar(data = results_clean %>%  group_by(gender, ideology, ideology_bin) %>% summarise(count = n())
            , aes(x = gender, y = count, fill = ideology)
            , stat = "identity", show.legend = FALSE)
 
 # Urban
 plot_urban = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(urban, ideology, panel) %>% summarise(count = n())
+  geom_bar(data = results_clean %>%  group_by(urban, ideology, ideology_bin) %>% summarise(count = n())
            , aes(x = urban, y = count, fill = ideology)
            , stat = "identity", show.legend = FALSE)
 
@@ -320,10 +322,11 @@ results_response_bin = results_clean %>%
          , fairness_q2_pain_bin, fairness_q4_relieved_bin) %>%
   gather(prompt, value, -ideology_bin, -arm) %>%
   filter(!is.na(value)) %>%
-  group_by(ideology_bin, arm, prompt, value) %>% summarise(count = n())
+  group_by(ideology_bin, arm, prompt) %>% mutate(total_value = sum(value)) %>%
+  group_by(ideology_bin, arm, prompt, value) %>% summarise(share = sum(value)/max(total_value))
 
 ggplot(data = results_response_bin
-       , aes(x = prompt, y = value, fill = count)) +
+       , aes(x = prompt, y = value, fill = share)) +
   geom_tile() +
   facet_grid(rows = vars(arm), cols = vars(ideology_bin)) +
   scale_fill_distiller(direction = 1) +
@@ -369,7 +372,7 @@ grid.arrange(plot_familiarity, plot_ubi
 
 _[[TBD]]_. (see _\autoref{fig:model_1_explore}_)
 
-```{r lm_function}
+```{r lm_function, include = FALSE}
 my_lm_calcs = function(lm_in, clusters_in){
   # Robust
   vcov_robust = vcovHC(lm_in)
@@ -393,110 +396,8 @@ my_lm_calcs = function(lm_in, clusters_in){
 }
 ```
 
-```{r}
-# Summaries
-all_data = data.table(results_full)
-all_data[, ideology_bin := case_when(is.na(ideology) ~ "missing",
-                                           ideology=="Very Liberal" ~ "liberal",
-                                           ideology=="Lean Liberal" ~ "liberal",
-                                           ideology=="Liberal" ~ "liberal",
-                                           ideology=="Very Conservative" ~ "conservative",
-                                           ideology=="Lean Conservative" ~ "conservative",
-                                           ideology=="Conservative" ~ "conservative",
-                                           TRUE ~ "moderate"), ]
-all_data[, story := case_when(is.na(arm) ~ "missing",
-                                           arm=="control" ~ "",
-                                           arm=="purity_base" ~ "homeless",
-                                           arm=="purity_extension" ~ "homeless-cleaned",
-                                           arm=="fairness_base" ~ "bullying",
-                                           arm=="fairness_extension" ~ "bullying-addressed",
-                                           TRUE ~ "others"), ]
-all_data[, FemaleReader := ifelse(gender!='Male', 1, 0), ]
-all_data[, ubi_familiarity_dummy := ifelse(ubi_familiarity_bin!='yes', 1, 0), ]
-all_data[, ubi := as.numeric(ubi_2), ]
-all_data[ , .(ubi=mean(as.numeric(ubi_2)), .N), keyby=list(ideology_bin, story, FemaleReader, ubi_familiarity_bin) ]
-```
-
-```{r}
-# augment model with results from coefteest and coefci using 
-# the supplied variance/covariance matrix
-apply_robust_estimates = function(model, vcovmatrix) {
-  model$robust.coeftest = coeftest(model, vcov. = vcovmatrix)
-  model$robust.estimate = model$robust.coeftest[, 'Estimate']
-  model$robust.std.error = model$robust.coeftest[, 'Std. Error']
-  model$robust.statistic = model$robust.coeftest[, 't value']
-  model$robust.p.value = model$robust.coeftest[, 'Pr(>|t|)']
-  model$robust.coefci = coefci(model, vcov. = vcovmatrix)
-  model$robust.ci.low = model$robust.coefci[, "2.5 %"]
-  model$robust.ci.high = model$robust.coefci[, "97.5 %"]
-  model
-}
-# liberals - homeless story
-hom_lib_mod<-all_data[ ideology_bin=='liberal' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*FemaleReader)]
-hom_lib_mod<-apply_robust_estimates(hom_lib_mod, vcovHC(hom_lib_mod))
-# conservatives - homeless story
-hom_con_mod<-all_data[ ideology_bin=='conservative' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*FemaleReader)]
-hom_con_mod<-apply_robust_estimates(hom_con_mod, vcovHC(hom_con_mod))
-# liberals - jacket story
-jac_lib_mod<-all_data[ ideology_bin=='liberal' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*FemaleReader)]
-jac_lib_mod<-apply_robust_estimates(jac_lib_mod, vcovHC(jac_lib_mod))
-# conservatives - jacket story
-jac_con_mod<-all_data[ ideology_bin=='conservative' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*FemaleReader)]
-jac_con_mod<-apply_robust_estimates(jac_con_mod, vcovHC(jac_con_mod))
-stargazer(hom_lib_mod, hom_con_mod,
-          type = 'text', 
-          se = list(sqrt(diag(vcovHC(hom_lib_mod))),
-                    sqrt(diag(vcovHC(hom_con_mod)))), 
-          header=F,
-          report=('v*c*sp'), 
-          add.lines=list(c("Ideology", "Liberal", "Conservative")))
-stargazer(jac_lib_mod, jac_con_mod,
-          type = 'text', 
-          se = list(sqrt(diag(vcovHC(jac_lib_mod))),
-                    sqrt(diag(vcovHC(jac_con_mod)))), 
-          header=F,
-          report=('v*c*sp'), 
-          add.lines=list(c("Ideology", "Liberal", "Conservative")))
-```
-
-```{r}
-# augment model with results from coefteest and coefci using 
-# the supplied variance/covariance matrix
-# liberals - homeless story
-hom_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_bin)]
-hom_lib_mod_2<-apply_robust_estimates(hom_lib_mod_2, vcovHC(hom_lib_mod_2))
-# conservatives - homeless story
-hom_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'bullying' & story != 'bullying-addressed',  lm(ubi~story*ubi_familiarity_bin)]
-hom_con_mod_2<-apply_robust_estimates(hom_con_mod_2, vcovHC(hom_con_mod_2))
-# liberals - jacket story
-jac_lib_mod_2<-all_data[ ideology_bin=='liberal' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_bin)]
-jac_lib_mod_2<-apply_robust_estimates(jac_lib_mod_2, vcovHC(jac_lib_mod_2))
-# conservatives - jacket story
-jac_con_mod_2<-all_data[ ideology_bin=='conservative' & story != 'homeless' & story != 'homeless-cleaned',  lm(ubi~story*ubi_familiarity_bin)]
-jac_con_mod_2<-apply_robust_estimates(jac_con_mod_2, vcovHC(jac_con_mod_2))
-stargazer(hom_lib_mod_2, hom_con_mod_2,
-          type = 'text', 
-          se = list(sqrt(diag(vcovHC(hom_lib_mod_2))),
-                    sqrt(diag(vcovHC(hom_con_mod_2)))), 
-          header=F,
-          report=('v*c*sp'), 
-          add.lines=list(c("Ideology", "Liberal", "Conservative")))
-stargazer(jac_lib_mod_2, jac_con_mod_2,
-          type = 'text', 
-          se = list(sqrt(diag(vcovHC(jac_lib_mod_2))),
-                    sqrt(diag(vcovHC(jac_con_mod_2)))), 
-          header=F,
-          report=('v*c*sp'), 
-          add.lines=list(c("Ideology", "Liberal", "Conservative")))
-```
 
 ```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot", results='asis'}
-# Exploratory
-results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
-results_armlibpure = results_clean %>% filter(ideology_bin == 'liberal' & grepl('purity|control', arm))
-results_armconfair = results_clean %>% filter(ideology_bin == 'conservative' & grepl('fairness|control', arm))
-results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
-
 model1_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
 model1_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
 model1_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair) , clusters_in = NA)
@@ -515,44 +416,7 @@ stargazer(model1_libfair$lm, model1_libpure$lm
 )
 ```
 
-```{r fitted_resduals_model1, fig.width=8, fig.height=8, fig.align="center", fig.cap="Model 1 Arms 1-4 - Residuals vs. Fitted"}
-par(mfrow=c(2,2))
-which_in = 2
-plot (model1_libfair$lm, which = which_in)
-plot (model1_libpure$lm, which = which_in)
-plot (model1_confair$lm, which = which_in)
-plot (model1_conpure$lm, which = which_in)
-```
 
-```{r coef_model1, fig.width=6, fig.height=4, fig.align="center", fig.cap="Model 1 Arms 1-4 - Coefficients"}
-
-arm_plot_df = function(model_in, group_in){
-  baseline_val = model_in$lm$coefficients[1]
-  
-  arm_plot_df = data.frame(group = rep(group_in, 3)
-                           , arm = c("control", "base", "extension")
-                           , coef = model_in$lm$coefficients
-                           , se = model_in$se_robust
-  ) %>%
-    mutate(baseline = baseline_val
-           , ubi = case_when(arm == "control" ~ coef
-                             , TRUE ~ coef + baseline))
-  
-  return(arm_plot_df)
-}
-
-arm_plot_libpure = arm_plot_df(model_in = model1_libpure, group_in = "liberal_pure")
-arm_plot_libfair = arm_plot_df(model_in = model1_libfair, group_in = "liberal_fair")
-arm_plot_conpure = arm_plot_df(model_in = model1_conpure, group_in = "conservative_pure")
-arm_plot_confair = arm_plot_df(model_in = model1_confair, group_in = "conservative_fair")
-
-ggplot() +
-  geom_point(data = arm_plot_libpure, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) +
-  geom_point(data = arm_plot_libfair, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) +
-  geom_point(data = arm_plot_conpure, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) + 
-  geom_point(data = arm_plot_confair, aes(x = baseline, y = ubi, shape = group, color = arm, size = 10)) +
-  geom_abline(slope = 1, intercept = 0)
-```
 
 ```{r methodology_model_1_gender, results='asis'}
 
