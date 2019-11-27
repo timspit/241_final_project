@@ -43,7 +43,7 @@ _[[TBD]]_
 _[[TBD]]_  
 
 ```{r import}
-results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 26, 2019_23.11.csv", stringsAsFactors = FALSE) %>%   filter(!grepl("Start|Import", StartDate)) %>% 
+results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 27, 2019_00.23.csv", stringsAsFactors = FALSE) %>%   filter(!grepl("Start|Import", StartDate)) %>% 
   mutate(panel = 1)
 results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control_November 22, 2019_17.34.csv", stringsAsFactors = FALSE) %>% 
   filter(!grepl("Start|Import", StartDate)) %>% 
