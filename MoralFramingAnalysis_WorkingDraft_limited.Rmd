@@ -439,6 +439,13 @@ my_lm_calcs = function(lm_in, clusters_in){
 }
 ```
 
+```{r svdesign}
+# using the survey design package and stratifying by recruitment day
+library(survey)
+dstrat <- svydesign(id=~1, strata=~recruitday, data=results_armconpur)
+summary(svyglm(ubi_number ~ arm_level, design=dstrat))
+
+```
 
 ```{r methodology_model_1, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1}Model 1 - Basic, Factorial Design Specification", results='asis'}
 model1_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+recruitment_day, data = results_armlibfair), clusters_in = NA)
