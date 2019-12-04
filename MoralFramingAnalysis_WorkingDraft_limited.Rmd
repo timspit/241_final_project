@@ -31,7 +31,7 @@ lapply(packages, library, character.only = TRUE)
 # install.packages("webshot")
 # webshot::install_phantomjs()
 
-stargazer_type = "latex" # change to latex when ready to knit
+stargazer_type = "text" #"latex" # change to latex when ready to knit
 ```
 
 \pagebreak
@@ -52,22 +52,22 @@ results_raw_panel2 = read.csv("./data/study/MF Framing Pilot - Full Recruitment 
   filter(!grepl("Start|Import", StartDate)) %>% 
   mutate(panel = 2)
 # Panel 2 - 10 Control Females
-results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE) %>% 
-  filter(!grepl("Start|Import", StartDate)) %>% 
-  mutate(panel = 2)
+#results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE) %>% 
+#  filter(!grepl("Start|Import", StartDate)) %>% 
+#  mutate(panel = 2)
 
 # Participant Details
 # Panel 1
 participant_detail_panel1 = read.csv("./data/study/Prolific Participants - Panel 1.csv", stringsAsFactors = FALSE)
 participant_detail_panel2 = read.csv("./data/study/Prolific Participants - Panel 2.csv", stringsAsFactors = FALSE)
-participant_detail_panel2_10fem = read.csv("./data/study/Prolific Participants - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE)
+#participant_detail_panel2_10fem = read.csv("./data/study/Prolific Participants - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE)
 ```
 
 ```{r deduplicate, include = FALSE}
 # Stack panel data (510 obs x 63 vars)
 results_stacked = bind_rows(results_raw_panel1
                             , results_raw_panel2
-                            , results_raw_panel2_10fem
+#                            , results_raw_panel2_10fem
                             ) %>%
   # Duplicate responses are a product of our multiple data extracts, remove as-is 510 obs x 63 vars)
   distinct(ResponseId, .keep_all= TRUE)
@@ -87,8 +87,8 @@ results_dedup = results_stacked %>%
 
 # Stack participant details (518 obs x 21 vars)
 participaipant_detail_stacked =  bind_rows(participant_detail_panel1
-                  , participant_detail_panel2
-                  , participant_detail_panel2_10fem)  %>%
+                  , participant_detail_panel2) %>%
+#                  , participant_detail_panel2_10fem)  %>%
   # Duplicate responses are a product of our multiple data extracts, remove as-is (518 obs x 21 vars)
   distinct(session_id, .keep_all= TRUE) %>%
   # Remove vars that will be in results as well (518 obs x 19 vars)
@@ -199,6 +199,13 @@ results_full = results_full_dedup  %>%
                                            , ubi_f == "Not familiar at all" ~ 0
                                            , TRUE ~ 1) %>% factor()
          , ubi_number = as.numeric(ubi_2)
+         , recruitment_day = case_when(is.na(recruitday) ~ "missing"
+                                    , recruitday == "T1" ~ "Tuesday1"
+                                    , recruitday == "SU" ~ "Sunday"
+                                    , recruitday == "M" ~ "Monday"
+                                    , recruitday == "W" ~ "Wednesday"
+                                    , recruitday == "T2" ~ "Tuesday2"
+                                    , TRUE ~ "unknown")         
   )
          
 # Clean = limit to the variables we need
@@ -209,15 +216,45 @@ results_clean = results_full %>%
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , purity_q2_repulsed_bin, purity_q4_relieved_bin, fairness_q2_pain_bin, fairness_q4_relieved_bin
          , open_text_reaction
-         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin)
+         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitment_day, recruitday)
 
 # Arm-specific datasets
 results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
 results_armlibpure = results_clean %>% filter(ideology_bin == 'liberal' & grepl('purity|control', arm))
 results_armconfair = results_clean %>% filter(ideology_bin == 'conservative' & grepl('fairness|control', arm))
 results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
+
+#Create levels for the recruitment day variable
+levels=c("Tuesday1", "Sunday", "Monday", "Tuesday2")
+results_armlibfair$recruitment_day = factor(results_armlibfair$recruitment_day, levels=levels)
+results_armlibpure$recruitment_day = factor(results_armlibpure$recruitment_day, levels=levels)
+results_armconpur$recruitment_day = factor(results_armconpur$recruitment_day, levels=levels)
+results_armconfair$recruitment_day = factor(results_armconfair$recruitment_day, levels=levels)
 ```
 
+```{r}
+#Review data for where we don't have apples to apples comparisons
+
+#d = data.table(results_armlibfair)
+#d = data.table(results_armlibpure)
+#d = data.table(results_armconfair)
+d = data.table(results_armconpur)
+d[, .(observations =.N), keyby = .(recruitment_day, arm)]
+```
+
+```{r}
+#Remove observations that don't give us apples to apples comparisons (e.g. data in the control group from different periods)
+
+#In the conservative care story arm, only keep the data collected for the first Tuesday
+results_armconfair<-results_armconfair[results_armconfair$recruitment_day=='Tuesday1',]
+
+#In the liberal purity story arm, only keep the data collected for the two Tuesday collections
+results_armlibpure<-results_armlibpure[results_armlibpure$recruitment_day=='Tuesday1' | results_armlibpure$recruitment_day=='Tuesday2',]
+
+#In the liberal care story arm, only keep the data collected for the two Tuesday collections
+results_armlibfair<-results_armlibfair[results_armlibfair$recruitment_day=='Tuesday1' | results_armlibfair$recruitment_day=='Tuesday2',]
+
+```
 ## Exploratory Analysis  
 _[[TBD]]_  
 
@@ -402,12 +439,20 @@ my_lm_calcs = function(lm_in, clusters_in){
 }
 ```
 
+```{r svdesign}
+# using the survey design package and stratifying by recruitment day
+library(survey)
+dstrat <- svydesign(id=~1, strata=~recruitday, data=results_armconpur)
+summary(svyglm(ubi_number ~ arm_level, design=dstrat))
+
+```
 
 ```{r methodology_model_1, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1}Model 1 - Basic, Factorial Design Specification", results='asis'}
-model1_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
-model1_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
+model1_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+recruitment_day, data = results_armlibfair), clusters_in = NA)
+model1_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+recruitment_day, data = results_armlibpure), clusters_in = NA)
 model1_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair) , clusters_in = NA)
-model1_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpur), clusters_in = NA)
+#results_armconpur$recruitment_day = relevel(results_armconpur$recruitment_day, ref=3)
+model1_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+recruitment_day, data = results_armconpur), clusters_in = NA)
 
 stargazer(model1_libfair$lm, model1_libpure$lm
           , model1_confair$lm, model1_conpure$lm
@@ -415,8 +460,8 @@ stargazer(model1_libfair$lm, model1_libpure$lm
           , se = list(model1_libfair$se_robust, model1_libpure$se_robust
                       , model1_confair$se_robust, model1_conpure$se_robust)
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Lib + Fair", "Lib + Purity"
-                              , "Con + Fair", "Con + Purity")
+          , column.labels = c("Lib + Care", "Lib + Purity"
+                              , "Con + Care", "Con + Purity")
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
@@ -427,10 +472,10 @@ NOTES:
 
 ```{r methodology_model_1_gender, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1}Model 1 - Gender Interaction, Factorial Design Specification", results='asis'}
 
-model1_libfair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibfair), clusters_in = NA)
-model1_libpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibpure), clusters_in = NA)
+model1_libfair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender + recruitment_day, data = results_armlibfair), clusters_in = NA)
+model1_libpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender + recruitment_day, data = results_armlibpure), clusters_in = NA)
 model1_confair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armconfair) , clusters_in = NA)
-model1_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armconpur), clusters_in = NA)
+model1_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender + recruitment_day, data = results_armconpur), clusters_in = NA)
 
 stargazer(model1_libfair_gender$lm, model1_libpure_gender$lm
           , model1_confair_gender$lm, model1_conpure_gender$lm
@@ -438,8 +483,8 @@ stargazer(model1_libfair_gender$lm, model1_libpure_gender$lm
           , se = list(model1_libfair_gender$se_robust, model1_libpure_gender$se_robust
                       , model1_confair_gender$se_robust, model1_conpure_gender$se_robust)
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Lib + Fair", "Lib + Purity"
-                              , "Con + Fair", "Con + Purity")
+          , column.labels = c("Lib + Care", "Lib + Purity"
+                              , "Con + Care", "Con + Purity")
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
@@ -462,8 +507,8 @@ stargazer(model1_libfair_familiarity$lm, model1_libpure_familiarity$lm
           , se = list(model1_libfair_familiarity$se_robust, model1_libpure_familiarity$se_robust
                       , model1_confair_familiarity$se_robust, model1_conpure_familiarity$se_robust)
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Lib + Fair", "Lib + Purity"
-                              , "Con + Fair", "Con + Purity")
+          , column.labels = c("Lib + Care", "Lib + Purity"
+                              , "Con + Care", "Con + Purity")
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
