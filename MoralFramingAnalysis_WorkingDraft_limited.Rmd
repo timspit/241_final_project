@@ -534,9 +534,9 @@ _[[TBD]]_
 
 ## Data Dictionary
 
-| Variable Name | Variable | Values | Source | Notes |
-| :---- | :-------- | :-------- | :---------- | :----- |
-| prolific_pid |||||
+| Variable Name | Variable | Values | Notes |
+| :---- | :-------- | :-------- | :----- |
+| prolific_pid | User ID | 10-digit numeric ||
 | panel |||||
 | arm |||||
 | node |||||
