@@ -234,6 +234,7 @@ results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & gr
 
 # Remove moderates for EDA
 results_clean_lim = results_clean %>% filter(ideology_bin != "moderate")
+results_clean_lim_ctrl = results_clean %>% filter(ideology_bin != "moderate" & grepl('control', arm))
 ```
 
 ```{r balance_arm_recruitday, echo = FALSE}
@@ -418,6 +419,24 @@ my_lm_calcs = function(lm_in, clusters_in){
   )
   return(lm_out)
 }
+```
+
+```{r model_test_recruitday, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_0}Model 0", results='asis'}
+model0_day = my_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_day, data = results_clean_lim_ctrl), clusters_in = NA)
+
+stargazer(model0_day$lm
+          , type = stargazer_type, header = F
+          , se = list(model0_day$se_robust)
+          , title            = "Moral Foundations Regression Specifications"
+          # , column.labels    = c("Lib + Fair", "Lib + Pure"
+          #                        , "Con + Fair", "Con + Pure")
+          # , covariate.labels = c("Base", "Extension"
+          #                        , "Sunday", "Monday", "Tuesday2")
+          # , dep.var.caption  = "Four Study Arms"
+          # , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          , report           = ('v*c*sp')
+)
 ```
 
 ```{r model_arm_recruitday, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1}Model 1 - Factorial Design, by Arm and Recruitment Day", results='asis'}
