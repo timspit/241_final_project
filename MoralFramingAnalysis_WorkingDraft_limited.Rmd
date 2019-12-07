@@ -27,7 +27,7 @@ packages = c('openxlsx'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
              , 'knitr')
 packages_needed = packages[!packages %in% installed.packages()]
-install.packages(packages_needed)
+if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
 # install.packages("webshot")
