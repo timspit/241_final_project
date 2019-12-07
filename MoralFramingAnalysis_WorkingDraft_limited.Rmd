@@ -27,7 +27,7 @@ packages = c('openxlsx'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
              , 'knitr')
 packages_needed = packages[!packages %in% installed.packages()]
-install.packages(packages_needed)
+if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
 # install.packages("webshot")
@@ -47,12 +47,12 @@ _[[TBD]]_
 ```{r import, include = FALSE}
 # Survey Results
 # Panel 1
-results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1.csv", stringsAsFactors = FALSE) %>% 
-  filter(!grepl("Start|Import", StartDate)) %>% 
+results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1.csv", stringsAsFactors = FALSE) %>%
+  filter(!grepl("Start|Import", StartDate)) %>%
   mutate(panel = 1)
-# Panel 2 
+# Panel 2
 results_raw_panel2 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2.csv", stringsAsFactors = FALSE) %>%
-  filter(!grepl("Start|Import", StartDate)) %>% 
+  filter(!grepl("Start|Import", StartDate)) %>%
   mutate(panel = 2)
 # Panel 2 - 10 Control Females
 results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE) %>%
@@ -224,7 +224,7 @@ results_clean = results_full %>%
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , purity_q2_repulsed_bin, purity_q4_relieved_bin, fairness_q2_pain_bin, fairness_q4_relieved_bin
          , open_text_reaction
-         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitment_day, recruitday) 
+         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitment_day, recruitday)
 
 # Arm-specific datasets
 results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
@@ -296,8 +296,8 @@ edges = data.frame(
   )
 
 visNetwork(nodes, edges) %>%
-  visEdges(arrows = "to") %>% 
-  visHierarchicalLayout() 
+  visEdges(arrows = "to") %>%
+  visHierarchicalLayout()
 ```
 
 ### Demographics  
@@ -307,7 +307,7 @@ visNetwork(nodes, edges) %>%
 # Ideology
 plot_ideology = ggplot() +
   geom_bar(data = results_clean_lim %>%  group_by(ideology) %>% summarise(count = n())
-           , aes(x = ideology, y = count, fill = ideology), stat = "identity") + 
+           , aes(x = ideology, y = count, fill = ideology), stat = "identity") +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
@@ -329,7 +329,7 @@ plot_urban = grpstackbar_plot +
   geom_bar(data = results_clean_lim %>% group_by(urban, ideology, ideology_bin) %>% summarise(count = n())
            , aes(x = urban, y = count, fill = ideology), stat = "identity", show.legend = FALSE)
 
-grid.arrange(plot_ideology, plot_gender 
+grid.arrange(plot_ideology, plot_gender
              , plot_age, plot_urban
              , nrow = 2)
 ```
@@ -345,10 +345,10 @@ results_response = results_clean_lim %>%
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved) %>%
   gather(prompt, value, -ideology_bin, -arm) %>%
   filter(!is.na(value)) %>%
-  group_by(ideology_bin, arm, prompt, value) %>% 
+  group_by(ideology_bin, arm, prompt, value) %>%
   summarise(count = n()) %>%
   mutate(response = factor(value, levels = response_levels)) %>%
-  group_by(ideology_bin, arm, prompt) %>% 
+  group_by(ideology_bin, arm, prompt) %>%
   mutate(count_total_cohort = sum(count)
          , count_share = count/count_total_cohort)
 
@@ -373,7 +373,7 @@ plot_familiarity = ggplot(data = results_clean_lim %>% group_by(ubi_familiarity,
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Heat map of number UBI like
-plot_ubi = ggplot(data = results_clean_lim %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number)) %>% 
+plot_ubi = ggplot(data = results_clean_lim %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number)) %>%
                     filter(!is.na(ubi_familiarity))
        , aes(x = ubi_familiarity, y = ideology, fill = ubi_number_avg)) +
   geom_tile() +
@@ -584,9 +584,9 @@ _[[TBD]]_
 
 ## Data Dictionary
 
-| Variable Name | Variable | Values | Source | Notes |
-| :---- | :-------- | :-------- | :---------- | :----- |
-| prolific_pid |||||
+| Variable Name | Variable | Values | Notes |
+| :---- | :-------- | :-------- | :----- |
+| prolific_pid | User ID | 10-digit numeric ||
 | panel |||||
 | arm |||||
 | node |||||
