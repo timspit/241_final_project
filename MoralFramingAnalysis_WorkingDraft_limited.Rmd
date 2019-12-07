@@ -23,7 +23,7 @@ rm(list=ls())
 packages = c('openxlsx'
              , 'tidyverse', 'data.table'
              , 'visNetwork'
-             , 'lmtest', 'sandwich', 'car'
+             , 'lmtest', 'sandwich', 'car', 'survey'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
              , 'knitr')
 lapply(packages, library, character.only = TRUE)
@@ -441,7 +441,6 @@ my_lm_calcs = function(lm_in, clusters_in){
 
 ```{r svdesign}
 # using the survey design package and stratifying by recruitment day
-library(survey)
 dstrat <- svydesign(id=~1, strata=~recruitday, data=results_armconpur)
 summary(svyglm(ubi_number ~ arm_level, design=dstrat))
 
