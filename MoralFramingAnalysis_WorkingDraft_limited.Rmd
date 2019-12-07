@@ -137,7 +137,7 @@ ideology_levels = c("Very Liberal", "Lean Liberal", "Liberal", "Moderate", "Cons
 response_levels = c("None at all", "A little", "A moderate amount", "A lot", "A great deal")
 ubi_group_levels = c("Promoter", "Passive", "Detractor")
 ubi_familiarity_levels = c("Extremely familiar", "Very familiar", "Moderately familiar", "Slightly familiar", "Not familiar at all")
-recruit_day_levels = c("Tuesday1", "Sunday", "Monday", "Tuesday2", "Friday")
+recruit_day_levels = c("Tuesday1", "Friday", "Sunday", "Monday", "Tuesday2")
 
 results_full = results_full_dedup  %>%
   # Define arms and nodes
@@ -210,10 +210,10 @@ results_full = results_full_dedup  %>%
          , ubi_number = as.numeric(ubi_2)
          , recruitment_day = case_when(is.na(recruitday) ~ "missing"
                                     , recruitday == "T1" ~ "Tuesday1"
+                                    , recruitday == "F" ~ "Friday"
                                     , recruitday == "SU" ~ "Sunday"
                                     , recruitday == "M" ~ "Monday"
                                     , recruitday == "T2" ~ "Tuesday2"
-                                    , recruitday == "F" ~ "Friday"
                                     , TRUE ~ "unknown") %>% factor(levels = recruit_day_levels)    
   )
 # Clean = limit to the variables we need
@@ -247,8 +247,8 @@ balance_arm_recuit
 ```{r balance_data, include = FALSE}
 # Remove observations that don't give us apples to apples comparisons (e.g. data in the control group from different periods)
 
-# Conservative + Purity = ALL
-results_armconpur_balance = results_armconpur
+# Conservative + Purity = ALL except Friday
+results_armconpur_balance = results_armconpur[results_armconpur$recruitment_day!='Friday',]
 
 # Conservative + Fairness = Tuesday1
 results_armconfair_balance = results_armconfair[results_armconfair$recruitment_day=='Tuesday1',]
@@ -258,6 +258,7 @@ results_armlibpure_balance = results_armlibpure[results_armlibpure$recruitment_d
 
 # Liberal + Fairness = Tuesday1 + Tuesday2
 results_armlibfair_balance = results_armlibfair[results_armlibfair$recruitment_day %in% c('Tuesday1', 'Tuesday2'),]
+
 
 ```
 
@@ -435,21 +436,23 @@ stargazer(model1_libfair_day$lm, model1_libpure_day$lm
           , column.labels    = c("Lib + Fair", "Lib + Pure"
                                  , "Con + Fair", "Con + Pure")
           , covariate.labels = c("Base", "Extension"
-                                 , "Sunday", "Monday", "Tuesday2")
+                                 ,"Friday", "Sunday", "Monday", "Tuesday2")
           , dep.var.caption  = "Four Study Arms"
           , dep.var.labels   = "UBI Ranking"
           , notes            = "HC Robust Standard Errors"
           , report           = ('v*c*sp')
 )
 ```
+
+
 NOTES:  
 - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level  
 - Day of recuitment not significant across any arms  
 - Therefore, no need to stratify (see below for example of stratification specification)  
 
 ```{r model_recruitday_stratify, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_2}Model 2 - Example Specification Stratified by Recruitment Day", results='asis'}
-# Using the survey design package and stratifying by recruitment day
-results_armconpur_strat = svydesign(id=~1, strata=~recruitday, data = results_armconpur)
+# Using the survey design package and stratifying by recruitment day to verify importance of day of recruitment
+results_armconpur_strat = svydesign(id=~1, strata=~recruitment_day, data = results_armconpur)
 model2_sratday = svyglm(ubi_number ~ arm_level, design = results_armconpur_strat)
 
 stargazer(model2_sratday
@@ -464,6 +467,7 @@ stargazer(model2_sratday
 ```
 NOTES:
 - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter?
+- 
 
 ```{r model_arm, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_3}Model 3 - Factorial Design, by Arm", results='asis'}
 # model3_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair_balance), clusters_in = NA)
