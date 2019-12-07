@@ -33,7 +33,7 @@ lapply(packages, library, character.only = TRUE)
 # install.packages("webshot")
 # webshot::install_phantomjs()
 
-stargazer_type = "text" #"latex" # change to latex when ready to knit
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
 ```
 
 \pagebreak
@@ -230,7 +230,7 @@ results_clean = results_full %>%
 results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
 results_armlibpure = results_clean %>% filter(ideology_bin == 'liberal' & grepl('purity|control', arm))
 results_armconfair = results_clean %>% filter(ideology_bin == 'conservative' & grepl('fairness|control', arm))
-results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
+results_armconpure = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
 
 # Remove moderates for EDA
 results_clean_lim = results_clean %>% filter(ideology_bin != "moderate")
@@ -249,18 +249,13 @@ balance_arm_recuit
 # Remove observations that don't give us apples to apples comparisons (e.g. data in the control group from different periods)
 
 # Conservative + Purity = ALL except Friday
-results_armconpur_balance = results_armconpur[results_armconpur$recruitment_day!='Friday',]
-
+results_armconpure_balance = results_armconpure[results_armconpure$recruitment_day!='Friday',]
 # Conservative + Fairness = Tuesday1
 results_armconfair_balance = results_armconfair[results_armconfair$recruitment_day=='Tuesday1',]
-
 # Liberal + Purity = Tuesday1 + Tuesday2
 results_armlibpure_balance = results_armlibpure[results_armlibpure$recruitment_day %in% c('Tuesday1', 'Tuesday2'),]
-
 # Liberal + Fairness = Tuesday1 + Tuesday2
 results_armlibfair_balance = results_armlibfair[results_armlibfair$recruitment_day %in% c('Tuesday1', 'Tuesday2'),]
-
-
 ```
 
 ## Exploratory Analysis  
@@ -428,7 +423,7 @@ model0_day = my_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_day,
 model1_libfair_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armlibfair), clusters_in = NA)
 model1_libpure_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armlibpure), clusters_in = NA)
 model1_confair_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armconfair), clusters_in = NA)
-model1_conpure_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armconpur), clusters_in = NA)
+model1_conpure_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armconpure), clusters_in = NA)
 
 stargazer(model0_day$lm
           , model1_libfair_day$lm, model1_libpure_day$lm
@@ -440,16 +435,15 @@ stargazer(model0_day$lm
           , title            = "Moral Foundations Regression Specifications"
           , column.labels    = c("Control Only", "Lib + Fair", "Lib + Pure"
                                  , "Con + Fair", "Con + Pure")
-          # , covariate.labels = c("Base", "Extension"
-          #                        ,"Friday", "Sunday", "Monday", "Tuesday2")
-          , dep.var.caption  = "Four Study Arms"
+          , order = c(1,4,5,2,3,6,7)
+          , covariate.labels = c("Liberal", "Base Treatment", "Extension Treatment"
+                                 ,"Friday", "Sunday", "Monday", "Tuesday2")
+          , dep.var.caption  = "Four Study Arms + Control"
           , dep.var.labels   = "UBI Ranking"
           , notes            = "HC Robust Standard Errors"
           , report           = ('v*c*sp')
 )
 ```
-
-
 NOTES:  
 - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level  
 - Day of recuitment not significant across any arms  
@@ -457,8 +451,8 @@ NOTES:
 
 ```{r model_recruitday_stratify, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_2}Model 2 - Example Specification Stratified by Recruitment Day", results='asis'}
 # Using the survey design package and stratifying by recruitment day to verify importance of day of recruitment
-results_armconpur_strat = svydesign(id=~1, strata=~recruitment_day, data = results_armconpur)
-model2_sratday = svyglm(ubi_number ~ arm_level, design = results_armconpur_strat)
+results_armconpure_strat = svydesign(id=~1, strata=~recruitment_day, data = results_armconpure)
+model2_sratday = svyglm(ubi_number ~ arm_level, design = results_armconpure_strat)
 
 stargazer(model2_sratday
           , type = stargazer_type, header = F
@@ -474,15 +468,38 @@ NOTES:
 - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter?
 - 
 
+```{r model_arm_prelim, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_3_prelim}Model 3 (Prelim) - Factorial Design, by Arm", results='asis'}
+model3_libfair_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armlibfair %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+model3_libpure_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armlibpure %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+model3_confair_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armconfair %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+model3_conpure_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armconpure %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+
+stargazer(model3_libfair_prelim$lm, model3_libpure_prelim$lm
+          , model3_confair_prelim$lm, model3_conpure_prelim$lm
+          , type = stargazer_type, header = F
+          , se = list(model3_libfair_prelim$se_robust, model3_libpure_prelim$se_robust
+                      , model3_confair_prelim$se_robust, model3_conpure_prelim$se_robust)
+          , title = "Moral Foundations Regression Specifications"
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
+```
+
+
 ```{r model_arm, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_3}Model 3 - Factorial Design, by Arm", results='asis'}
-# model3_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair_balance), clusters_in = NA)
-# model3_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure_balance), clusters_in = NA)
-# model3_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair_balance), clusters_in = NA)
-# model3_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpur_balance), clusters_in = NA)
 model3_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
 model3_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
 model3_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
-model3_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpur), clusters_in = NA)
+model3_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure),  clusters_in = NA)
 
 stargazer(model3_libfair$lm, model3_libpure$lm
           , model3_confair$lm, model3_conpure$lm
@@ -492,7 +509,9 @@ stargazer(model3_libfair$lm, model3_libpure$lm
           , title = "Moral Foundations Regression Specifications"
           , column.labels = c("Lib + Fair", "Lib + Pure"
                               , "Con + Fair", "Con + Pure")
-          , covariate.labels = c("Base", "Extension")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
@@ -504,13 +523,16 @@ NOTES:
 ```{r model_conpure_interactions, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_4}Models 4-7 - Con + Pure Interaction Specifications", results='asis'}
 
 # Gender
-model4_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender, data = results_armconpur), clusters_in = NA)
+model4_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender
+                                               , data = results_armconpure), clusters_in = NA)
 # Familiarity
-model5_conpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + ubi_familiarity_bin, data = results_armconpur), clusters_in = NA)
+model5_conpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + ubi_familiarity_bin
+                                                    , data = results_armconpure), clusters_in = NA)
 # Reaction
-model6_conpure_reaction_bas = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin, data = results_armconpur), clusters_in = NA)
-model7_conpure_reaction_ext = my_lm_calcs(lm_in = lm(ubi_number ~ purity_q4_relieved_bin
-                                                      , data = results_armconpur %>% filter(arm_level != "base")), clusters_in = NA)
+model6_conpure_reaction_bas = my_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin 
+                                                     , data = results_armconpure %>% filter(arm_level != "extension")), clusters_in = NA)
+model7_conpure_reaction_ext = my_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin + purity_q4_relieved_bin
+                                                      , data = results_armconpure %>% filter(arm_level != "base")), clusters_in = NA)
 
 stargazer(model3_conpure$lm
           , model4_conpure_gender$lm
@@ -525,11 +547,11 @@ stargazer(model3_conpure$lm
                       , model7_conpure_reaction_ext$se_robust
           )
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Base", "Gender", "Familiarity", "Reaction - Base", "Reaction - Extension")
-          , covariate.labels = c("Base", "Extension"
+          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction (Base)", "Reaction (Extension)")
+          , covariate.labels = c("Base Treatment", "Extension Treatment"
                                  , "Male", "Familiar w/ UBI"
                                  , "Repulsed", "Relieved")
-          , dep.var.caption  = "Con + Pure Arm"
+          , dep.var.caption  = "Con + Pure Arm Only"
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')

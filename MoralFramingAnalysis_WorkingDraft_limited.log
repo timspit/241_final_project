@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.9.8)  7 DEC 2019 12:36
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.9.8)  7 DEC 2019 18:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -582,7 +582,20 @@ Package: titling 2009/09/04 v2.1d maketitle typesetting
 \thanksmarkwidth=\skip52
 \thanksmargin=\skip53
 \droptitle=\skip54
-) (./MoralFramingAnalysis_WorkingDraft_limited.aux)
+) (./MoralFramingAnalysis_WorkingDraft_limited.aux
+
+LaTeX Warning: Label `' multiply defined.
+
+
+LaTeX Warning: Label `' multiply defined.
+
+
+LaTeX Warning: Label `' multiply defined.
+
+
+LaTeX Warning: Label `' multiply defined.
+
+)
 \openout1 = `MoralFramingAnalysis_WorkingDraft_limited.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 131.
@@ -735,7 +748,7 @@ LaTeX Font Info:    Try loading font information for T1+lmtt on input line 167.
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 <MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/flowchart-1.pdf, 
-id=94, 1003.75pt x 590.205pt>
+id=74, 1003.75pt x 590.205pt>
 File: MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/flowchart-1.
 pdf Graphic file (type pdf)
 <use MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/flowchart-1.p
@@ -744,7 +757,7 @@ Package pdftex.def Info: MoralFramingAnalysis_WorkingDraft_limited_files/figure
 -latex/flowchart-1.pdf  used on input line 198.
 (pdftex.def)             Requested size: 469.75618pt x 276.21663pt.
 <MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_demog
-raphics-1.pdf, id=95, 578.16pt x 578.16pt>
+raphics-1.pdf, id=75, 578.16pt x 578.16pt>
 File: MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_
 demographics-1.pdf Graphic file (type pdf)
 <use MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_d
@@ -753,7 +766,7 @@ Package pdftex.def Info: MoralFramingAnalysis_WorkingDraft_limited_files/figure
 -latex/exploratory_demographics-1.pdf  used on input line 210.
 (pdftex.def)             Requested size: 469.75385pt x 469.75385pt.
 <MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_react
-ions-1.pdf, id=97, 578.16pt x 578.16pt>
+ions-1.pdf, id=77, 578.16pt x 578.16pt>
 File: MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_
 reactions-1.pdf Graphic file (type pdf)
 <use MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_r
@@ -767,7 +780,7 @@ LaTeX Font Info:    Try loading font information for TS1+lmtt on input line 242
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [2]
 <MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_outco
-me-1.pdf, id=117, 578.16pt x 578.16pt>
+me-1.pdf, id=97, 578.16pt x 578.16pt>
 File: MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_
 outcome-1.pdf Graphic file (type pdf)
 <use MoralFramingAnalysis_WorkingDraft_limited_files/figure-latex/exploratory_o
@@ -785,125 +798,84 @@ LaTeX Warning: Reference `fig:model_1_explore' on page 7 undefined on input lin
 e 264.
 
 
-Overfull \hbox (39.4935pt too wide) in paragraph at lines 276--276
-[]                  \T1/lmtt/m/n/10 -------------------------------------------
-------------------------------------[] 
+Overfull \hbox (146.48238pt too wide) in paragraph at lines 269--321
+ [][] 
  []
 
 
-Overfull \hbox (13.24358pt too wide) in paragraph at lines 276--276
-[]                      \T1/lmtt/m/n/10 Lib + Fair          Lib + Pure         
- Con + Fair          Con + Pure[] 
+Overfull \hbox (8.63487pt too wide) in paragraph at lines 376--408
+ [][] 
  []
 
 
-Overfull \hbox (315.82143pt too wide) in paragraph at lines 312--327
-\T1/lmr/m/n/10 ================================================================
-=====================================
- []
-
-[7]
-Underfull \hbox (badness 1019) in paragraph at lines 360--367
-\T1/lmr/m/n/10 ============================================= Note: \T1/lmr/m/it
-/10 p<0.1; \T1/lmr/bx/it/10 p<0.05;
+Overfull \hbox (28.63487pt too wide) in paragraph at lines 413--445
+ [][] 
  []
 
 
-Overfull \hbox (28.99353pt too wide) in paragraph at lines 378--378
-[]                \T1/lmtt/m/n/10 ---------------------------------------------
-----------------------------------[] 
+Overfull \hbox (142.16316pt too wide) in paragraph at lines 456--504
+ [][] 
  []
 
 
-Overfull \hbox (2.7436pt too wide) in paragraph at lines 378--378
-[]                    \T1/lmtt/m/n/10 Lib + Fair          Lib + Pure          C
-on + Fair          Con + Pure[] 
- []
+LaTeX Warning: Reference `fig:model_1_fitplots' on page 7 undefined on input li
+ne 535.
 
-
-Overfull \hbox (300.26546pt too wide) in paragraph at lines 398--412
-\T1/lmr/m/n/10 ================================================================
-===================================
- []
-
-
-Overfull \hbox (149.74318pt too wide) in paragraph at lines 423--423
-[]                \T1/lmtt/m/n/10 ---------------------------------------------
----------------------------------------------------------[] 
- []
-
-
-Overfull \hbox (149.74318pt too wide) in paragraph at lines 423--423
-[]                       \T1/lmtt/m/n/10 Base                Gender            
- Familiarity       Reaction - Base   Reaction - Extension[] 
- []
-
-
-Overfull \hbox (102.49332pt too wide) in paragraph at lines 423--423
-[]                        \T1/lmtt/m/n/10 (1)                  (2)             
-     (3)                 (4)                 (5)[] 
- []
-
-[8]
-Overfull \hbox (479.1591pt too wide) in paragraph at lines 456--466
-\T1/lmr/m/n/10 ================================================================
-==========================================================
- []
-
-
-LaTeX Warning: Reference `fig:model_1_fitplots' on page 9 undefined on input li
-ne 496.
-
-[9] [10] [11] [12] [13]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 583.
-[14]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 583.
+[7] [8] [9] [10] [11] [12] [13] [14] [15]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 622.
+[16]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 622.
 (./MoralFramingAnalysis_WorkingDraft_limited.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 583.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 583.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 622.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 622.
 Package rerunfilecheck Info: File `MoralFramingAnalysis_WorkingDraft_limited.ou
 t' has not changed.
-(rerunfilecheck)             Checksum: 98E452BDC92086815FDDA1893A2892CF;2369.
+(rerunfilecheck)             Checksum: F31D2E94FC77785D4060E513A768D60D;1251.
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 583.
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 622.
  ) 
 Here is how much of TeX's memory you used:
- 10955 strings out of 494587
- 158646 string characters out of 6176413
- 230265 words of memory out of 5000000
- 14363 multiletter control sequences out of 15000+600000
- 78639 words of font info for 60 fonts, out of 8000000 for 9000
+ 10937 strings out of 494587
+ 158160 string characters out of 6176413
+ 259018 words of memory out of 5000000
+ 14351 multiletter control sequences out of 15000+600000
+ 74368 words of font info for 59 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 28i,8n,32p,381b,452s stack positions out of 5000i,500n,10000p,200000b,80000s
-{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.e
-nc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.
-enc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ma
-thit.enc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/
-lm-ts1.enc}<c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/publi
-c/lm/lmbx10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/
-public/lm/lmbx12.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/t
-ype1/public/lm/lmbx9.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fon
-ts/type1/public/lm/lmbxi10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-di
-st/fonts/type1/public/lm/lmmi10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/tex
-mf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX
-/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/manat/AppData/Roaming/Tin
-yTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/manat/AppData/Roaming
-/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr6.pfb><c:/Users/manat/AppData/Roam
-ing/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/manat/AppData/R
-oaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb><c:/Users/manat/AppDat
-a/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/manat/A
-ppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri12.pfb><c:/Users/ma
-nat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri8.pfb><c:/User
-s/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb><c:
-/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.p
-fb>
-Output written on MoralFramingAnalysis_WorkingDraft_limited.pdf (14 pages, 4006
-97 bytes).
+ 28i,10n,32p,281b,452s stack positions out of 5000i,500n,10000p,200000b,80000s
+{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-math
+sy.enc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm
+-ec.enc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/l
+m-rm.enc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/
+lm-mathit.enc}{c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvip
+s/lm/lm-ts1.enc}<c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/
+public/lm/lmbx10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/t
+ype1/public/lm/lmbx12.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fo
+nts/type1/public/lm/lmbx9.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dis
+t/fonts/type1/public/lm/lmmi10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texm
+f-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/
+texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/manat/AppData/Roaming/Tiny
+TeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/manat/AppData/Roaming/
+TinyTeX/texmf-dist/fonts/type1/public/lm/lmr6.pfb><c:/Users/manat/AppData/Roami
+ng/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/manat/AppData/Ro
+aming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb><c:/Users/manat/AppData
+/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/manat/Ap
+pData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri12.pfb><c:/Users/man
+at/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri8.pfb><c:/Users
+/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/
+Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb>
+<c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10
+.pfb><c:/Users/manat/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/l
+mtti10.pfb>
+Output written on MoralFramingAnalysis_WorkingDraft_limited.pdf (16 pages, 3920
+82 bytes).
 PDF statistics:
- 301 PDF objects out of 1000 (max. 8388607)
- 255 compressed objects within 3 object streams
- 67 named destinations out of 1000 (max. 500000)
- 141 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 290 PDF objects out of 1000 (max. 8388607)
+ 241 compressed objects within 3 object streams
+ 62 named destinations out of 1000 (max. 500000)
+ 109 words of extra memory for PDF output out of 10000 (max. 10000000)
 
