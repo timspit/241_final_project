@@ -1,0 +1,686 @@
+---
+title: "Swinging Foundational Views: An Experiment on the Persuasive Effects of Moral Frames"
+subtitle: "W241 Experiments and Causality"
+author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
+date: "December 10, 2019"
+tags: [Moral Foundations, Universal Basic Income, Survey, Experiment]
+abstract: Through this experiment we tested the treatment effect of various presentations of the moral foundations ("the frame") on a person's feelings towards a particular topic.  
+output:
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
+    toc: no
+  md_document:
+    variant: markdown
+  html_document:
+    df_print: paged
+    toc: yes
+---
+
+```{r setup, include = FALSE}
+rm(list=ls())
+
+packages = c('openxlsx'
+             , 'tidyverse', 'data.table'
+             , 'visNetwork'
+             , 'lmtest', 'sandwich', 'car', 'survey'
+             , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
+             , 'knitr', 'webshot'
+             , 'png', 'grid')
+packages_needed = packages[!packages %in% installed.packages()]
+if(length(packages_needed) > 0) install.packages(packages_needed)
+lapply(packages, library, character.only = TRUE)
+
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
+```
+
+```{r import, include = FALSE}
+# Survey Results
+# Panel 1
+results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1.csv", stringsAsFactors = FALSE) %>%
+  filter(!grepl("Start|Import", StartDate)) %>%
+  mutate(panel = 1)
+# Panel 2
+results_raw_panel2 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2.csv", stringsAsFactors = FALSE) %>%
+  filter(!grepl("Start|Import", StartDate)) %>%
+  mutate(panel = 2)
+# Panel 2 - 10 Control Females
+results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE) %>%
+ filter(!grepl("Start|Import", StartDate)) %>%
+ mutate(panel = 2)
+# Participant Details
+# Panel 1
+participant_detail_panel1 = read.csv("./data/study/Prolific Participants - Panel 1.csv", stringsAsFactors = FALSE)
+# Panel 2
+participant_detail_panel2 = read.csv("./data/study/Prolific Participants - Panel 2.csv", stringsAsFactors = FALSE)
+# Panel 2 - 10 Control Females
+participant_detail_panel2_10fem = read.csv("./data/study/Prolific Participants - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE)
+```
+
+```{r deduplicate, include = FALSE}
+# Stack panel data (500 obs x 63 vars)
+results_stacked = bind_rows(results_raw_panel1
+                            , results_raw_panel2
+                            , results_raw_panel2_10fem
+                            ) %>%
+  # Duplicate responses are a product of our multiple data extracts, remove as-is 500 obs x 63 vars)
+  distinct(ResponseId, .keep_all= TRUE)
+# Identify if the same person filled out the survey >1x
+results_ids_dedup = results_stacked %>%
+  select(PROLIFIC_PID, ResponseId, StartDate) %>%
+  group_by(PROLIFIC_PID) %>%
+  summarize(count = n()
+            , min_date = min(StartDate))
+# Keep only their first submission (500 obs x 64 vars [count will tell us who filled out 2x])
+results_dedup = results_stacked %>%
+  merge(results_ids_dedup
+        , by.x = c("PROLIFIC_PID", "StartDate")
+        , by.y = c("PROLIFIC_PID", "min_date")
+        , all.x = TRUE) %>%
+  filter(!is.na(count))
+
+# Stack participant details (508 obs x 21 vars)
+participaipant_detail_stacked =  bind_rows(participant_detail_panel1
+                                           , participant_detail_panel2
+                                           , participant_detail_panel2_10fem) %>%
+  # Duplicate responses are a product of our multiple data extracts, remove as-is (508 obs x 21 vars)
+  distinct(session_id, .keep_all= TRUE) %>%
+  # Remove vars that will be in results as well (518 obs x 19 vars)
+  select(-status, -age)
+# Identify if the same person filled out the survey >1x
+participaipant_ids_dedup = participaipant_detail_stacked %>%
+  select(participant_id, session_id, started_datetime) %>%
+  group_by(participant_id) %>%
+  summarize(count = n()
+            , min_date = min(started_datetime))
+# Keep only their first submission (508 obs x 18 vars [count will tell us who filled out 2x])
+participaipant_detail_dedup = participaipant_detail_stacked %>%
+  merge(participaipant_ids_dedup
+        , by.x = c("participant_id", "started_datetime")
+        , by.y = c("participant_id", "min_date")
+        , all.x = TRUE) %>%
+  filter(!is.na(count)) %>% select(-count, -session_id)
+
+# Merge for final dataset (500 obs x 81 vars)
+results_full_dedup = merge(results_dedup
+                           , participaipant_detail_dedup
+                           , by.x = "PROLIFIC_PID"
+                           , by.y = "participant_id"
+                           , all.x = TRUE)
+```
+
+```{r data_cleaning, include = FALSE}
+# Adjust all variable names to remove '-' and '.' + lowercase
+names(results_full_dedup) = tolower(gsub(x = names(results_full_dedup), pattern = "\\-|\\.", replacement = "_"))
+
+# Discrete variables as factors (manual ordering for plotting)
+arm_levels = c("Control", "Purity_Base", "Purity_Extension", "Fairness_Base", "Fairness_Extension")
+ideology_levels = c("Very Liberal", "Lean Liberal", "Liberal", "Moderate", "Conservative", "Lean Conservative", "Very Conservative")
+response_levels = c("None at all", "A little", "A moderate amount", "A lot", "A great deal")
+ubi_group_levels = c("Promoter", "Passive", "Detractor")
+ubi_familiarity_levels = c("Extremely familiar", "Very familiar", "Moderately familiar", "Slightly familiar", "Not familiar at all")
+recruit_wave_levels = c("Wave1", "Wave2", "Wave3", "Wave4", "Wave5")
+
+results_full = results_full_dedup  %>%
+  # Define arms and nodes
+  mutate(arm = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ "Purity_Base"
+                         , grepl('a', fc_c_1, ignore.case = TRUE) ~ "Purity_Extension"
+                         , grepl('a', fc_d_1, ignore.case = TRUE) ~ "Fairness_Base"
+                         , grepl('a', fc_e_1, ignore.case = TRUE) ~ "Fairness_Extension"
+                         , TRUE ~ "Control") %>% factor(levels = arm_levels)
+         , node = paste0(arm, "_panel_", panel)
+         , arm_level = case_when(grepl('Base', arm) ~ 'Base'
+                                 , grepl('Extension', arm) ~ 'Extension'
+                                 , TRUE ~ 'Control') %>% factor(levels = c("Control", "Base", "Extension"))
+         , arm_story = case_when(grepl('Purity', arm) ~ 'Purity'
+                                 , grepl('Fairness', arm) ~ 'Fairness'
+                                 , TRUE ~ 'Control') %>% factor(levels = c("Control", "Purity", "Fairness"))
+         # Combine reaction vars from different arms
+         , purity_q1_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
+                                      , grepl('a', fc_c_1, ignore.case = TRUE) ~ fc_c_1
+                                      , TRUE ~ NA_character_)
+         , purity_q2_repulsed = case_when(grepl('a', fc_b_2, ignore.case = TRUE) ~ fc_b_2
+                                          , grepl('a', fc_c_2, ignore.case = TRUE) ~ fc_c_2
+                                          , TRUE ~ NA_character_)
+         , purity_q3_injustice = case_when(grepl('a', fc_b_3, ignore.case = TRUE) ~ fc_b_3
+                                           , grepl('a', fc_c_3, ignore.case = TRUE) ~ fc_c_3
+                                           , TRUE ~ NA_character_)
+         , purity_q4_relieved = case_when(grepl('a', fc_c_4, ignore.case = TRUE) ~ fc_c_4
+                                          , TRUE ~ NA_character_)
+         , fairness_q1_self = case_when(grepl('a', fc_d_1, ignore.case = TRUE) ~ fc_d_1
+                                        , grepl('a', fc_e_1, ignore.case = TRUE) ~ fc_e_1
+                                        , TRUE ~ NA_character_)
+         , fairness_q2_pain = case_when(grepl('a', fc_d_2, ignore.case = TRUE) ~ fc_d_2
+                                        , grepl('a', fc_e_2, ignore.case = TRUE) ~ fc_e_2
+                                        , TRUE ~ NA_character_)
+         , fairness_q3_injustice = case_when(grepl('a', fc_d_3, ignore.case = TRUE) ~ fc_d_3
+                                             , grepl('a', fc_e_3, ignore.case = TRUE) ~ fc_e_3
+                                             , TRUE ~ NA_character_)
+         , fairness_q4_relieved = case_when(grepl('a', fc_e_4, ignore.case = TRUE) ~ fc_e_4
+                                          , TRUE ~ NA_character_)
+         # Bin reaction vars
+         , purity_q2_repulsed_bin = case_when(is.na(purity_q2_repulsed) ~ NA_real_
+                                              , purity_q2_repulsed %in% c("None at all", "A little") ~ 0
+                                              , purity_q2_repulsed %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                              , TRUE ~ NA_real_) %>% factor()
+         , purity_q4_relieved_bin = case_when(is.na(purity_q4_relieved) ~ NA_real_
+                                              , purity_q4_relieved %in% c("None at all", "A little") ~ 0
+                                              , purity_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                              , TRUE ~ NA_real_) %>% factor()
+         , fairness_q2_pain_bin = case_when(is.na(fairness_q2_pain) ~ NA_real_
+                                            , fairness_q2_pain %in% c("None at all", "A little") ~ 0
+                                            , fairness_q2_pain %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                            , TRUE ~ NA_real_) %>% factor()
+         , fairness_q4_relieved_bin = case_when(is.na(fairness_q4_relieved) ~ NA_real_
+                                                , fairness_q4_relieved %in% c("None at all", "A little") ~ 0
+                                                , fairness_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                                , TRUE ~ NA_real_) %>% factor()
+         , open_text_reaction = q3_fc2
+         # Factor variables
+         , ideology = factor(polispect, levels = ideology_levels)
+         , ideology_bin = case_when(is.na(ideology) ~ "missing"
+                                    , ideology == "Very Liberal" ~ "Liberal"
+                                    , ideology == "Lean Liberal" ~ "Liberal"
+                                    , ideology == "Liberal" ~ "Liberal"
+                                    , ideology == "Very Conservative" ~ "Conservative"
+                                    , ideology == "Lean Conservative" ~ "Conservative"
+                                    , ideology == "Conservative" ~ "Conservative"
+                                    , TRUE ~ "Moderate")
+         # UBI/Outcome
+         , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
+         , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
+         , ubi_familiarity_bin = case_when(is.na(ubi_f) ~ NA_real_
+                                           , ubi_f == "Not familiar at all" ~ 0
+                                           , TRUE ~ 1) %>% factor()
+         , ubi_number = as.numeric(ubi_2)
+         # Recruitment Day blocks
+         , recruitment_wave = case_when(is.na(recruitday) ~ "missing"
+                                    , recruitday == "T1" ~ "Wave1"
+                                    , recruitday == "F" ~ "Wave2"
+                                    , recruitday == "SU" ~ "Wave3"
+                                    , recruitday == "M" ~ "Wave4"
+                                    , recruitday == "T2" ~ "Wave5"
+                                    , TRUE ~ "unknown") %>% factor(levels = recruit_wave_levels)  
+  )
+# Clean = limit to the variables we need
+results_clean = results_full %>%
+  select(prolific_pid, panel, arm, node, arm_level, arm_story
+         , ideology, ideology_bin, age, gender, urban, employment_status, student_status
+         , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
+         , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
+         , purity_q2_repulsed_bin, purity_q4_relieved_bin, fairness_q2_pain_bin, fairness_q4_relieved_bin
+         , open_text_reaction
+         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitday, recruitment_wave)
+
+# Arm-specific datasets
+results_armlibfair = results_clean %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
+results_armlibpure = results_clean %>% filter(ideology_bin == 'Liberal' & grepl('Purity|Control', arm))
+results_armconfair = results_clean %>% filter(ideology_bin == 'Conservative' & grepl('Fairness|Control', arm))
+results_armconpure = results_clean %>% filter(ideology_bin == 'Conservative' & grepl('Purity|Control', arm))
+# Remove moderates for EDA
+results_clean_lim = results_clean %>% filter(ideology_bin != "Moderate")
+# Controls only for recruitment day test
+results_clean_lim_ctrl = results_clean %>% filter(ideology_bin != "Moderate" & grepl('Control', arm))
+```
+
+```{r lm_function, include = FALSE}
+custom_lm_calcs = function(lm_in, clusters_in){
+  # Robust
+  vcov_robust = vcovHC(lm_in)
+  se_robust = sqrt(diag(vcov_robust))
+  # Cluster
+  if(length(clusters_in) > 1){
+    vcov_cluster = cluster.vcov(lm_in, clusters_in)
+    se_cluster = sqrt(diag(vcov_cluster))
+  } else {
+    vcov_cluster = NA
+    se_cluster = NA
+  }
+  # Output
+  lm_out = list(lm = lm_in
+                , vcov_robust = vcov_robust
+                , se_robust = se_robust
+                , vcov_cluster = vcov_cluster
+                , se_cluster = se_cluster
+  )
+  return(lm_out)
+}
+```
+
+# Introduction  
+We make hundreds of decisions each day. We may spend minutes, even hours, considering information to arrive at a decision. But sometimes it's just seconds. A gut response. That response, the baseline opinion anchoring the choices we make, is different for everyone and can be extremely difficult to change.  
+
+In the early 2000s, psychologists Jonathan Haidt, Craigh Joseph and Jesse Graham proposed a framework to explain why our opinions are different, but also similar. Their "moral foundations theory" built upon an earlier proposal stating that morality stems from matters of harm, rights and justice. Haidt and his colleagues, however, describe five doctrines or foundations that ultimately influence human decision and behavior: harm/care, fairness/reciprocity, ingroup/loyalty, authority/respect and purity/sanctity.  
+
+Moral foundations theory has often been applied to studies of political science, the differences between cultures and intuitive ethics. They offer a concrete understanding of the morals that unite and divide us all. In his book, The Righteous Mind (2012), Haidt explored how the five foundations are used by both conservatives and liberals to support moral questions in the political realm. Those leaning more to the political left are guided predominantly by harm/care and fairness/reciprocity, while those leaning right rely on all five foundations. It follows then that conservatives weigh the first two foundations less when making decisions or judgments; harm/care and fairness/reciprocity comprise one-fifth of the equation, respectively, instead of one-half.  
+
+Perhaps in a perfect world, every voter would decide on issues and candidates based on thorough research of policy and practice, but we know this is not the case. Hillary Clinton's 2016 presidential campaign fought to make her more "likeable" to voters. The Russian government purchased ads in an attempt to sway political opinions of Facebook users. Haidt would likely agree that these are examples of political organizations attempting to trigger certain moral foundations to "get your vote, your money, or your time." But is this possible?  
+
+# Hypothesis & Motivation  
+
+Can tapping into one or more moral foundations modify how an individual feels about a topic, particularly those which are politically-relevant? Assume that an opinion can be represented as a point on a line, capable of moving to the left or the right (or up or down, if we want to avoid confusion with the colloquial political spectrum). With this assumption we can test the following hypothesis: framing a politically divisive topic with a targeted moral foundation can move a subject's opinion away from its original point on the line, in either direction.  
+
+Online marketing campaigns and social media has increased the specificity with which political campaigns--or anyone--can target individuals with persuasion (or manipulation?) tactics. A study in 2014 by Martin Day, Susan Fiske, Emily Downing and Thomas Trail examined the effects of Haidt's moral foundations on the opinions of liberals and conservatives, for what the researchers described as "pro-attitudinal and counter-attitudinal" positions on issues.  
+
+Day et al executed two experiments to test the effects of moral foundation-based "frames". A frame can take several forms--stories, pictures, newspaper articles, to name a few. In Day's studies, the participants were shown a number of morally framed stances. For example, a "morally framed conservative stance" on immigration which targets the fairness foundation reads, "It is only fair to preserve the rights of long-term citizens ahead of recent immigrants."   
+
+Both studies supported the hypothesis that an individual's political attitude is bolstered by relevant moral foundation-based frames, however only one study supported that the same frames may persuade a subject to shift his or her opinion away from one side of the political spectrum.   
+
+Another study that played a key role in defining this experiment was a paper by Lene Aaroe, Michael Bang Petersen and Kevin Arceneaux on 'Why and How Individual Differences in Disgust Sensitivity Underlie Opposition to Immigration'. The subjects are tested on their support for immigration after their disgust response is triggered. This study finds some causal factors that influence political attitudes outside of one's conscious awareness and confirms that leveraging framing as a treatment lever does produce an observable effect on subjects.   
+
+To build on the conclusions of Day et al's work, we designed a study to measure the effect of moral foundation-based frame on opinions on Universal Basic Income (UBI). UBI is a topic for which political conservatives and liberals are generally accepted to have opposing views. To maximize resources available, we decided to only test two of the moral foundations: purity/sanctity and fairness/reciprocity.
+
+# Experimental Design  
+
+## Participants  
+
+We recruited a sample of N adults living in the United States using Prolific, an online platform that connects researchers with participants around the world. The only control that was leveraged for the characteristics of those participants was to select adults living in the United States who did not identify as politically moderate. This was done through Prolific, an online platform that connects researchers with participants around the world. Of the N participants who began the study, all but three were from the conservative block and one from the liberal block completed all of the required tasks. Those who did not complete the survey were automatically replaced by Prolific. Those participants received $0.70 as compensation for participating in the study.
+Our study specifically targeted subjects who identified as either politically liberal or conservative. Political moderates were assumed to not have strong beliefs on either side of the spectrum, and thus would not have strong groundings in the moral foundations framework.
+The subject pool comprised of XX (x%) .. Figure 1 shows further detail on the political identifications of the participants. XX (x%) identified as female, XX (x%) identified as male.
+Collection of participants took place over several days. We had limited funds available with which to execute the experiment, so we agreed to gather 100 conservative and 100 liberal participants in the first wave, conduct initial covariate balance checks, and proceed with additional participants as deemed necessary. 
+Overall, we had X waves. Table 1 provides additional information on each wave. Overall, we gathered an effective sample size for analysis of X participants: xx. stats.
+We have a high level of confidence in the randomization of our effective participant population due to the use of Prolific to gather subjects. Qualtrics was leveraged to randomly assign subjects to control or one of the 4 other treatment conditions so there would be an even distribution across all 5 survey arms. We noted that the temporal nature of the waves may affect responses, so this was noted as a covariate to be included during our analysis.
+
+## Procedure  
+
+We developed two treatment options for both moral foundations included in our experiment, executed via a written story with accompanying photographs (for further detail, see Materials section).   
+
+All subjects assigned to treatment would read a "base" story designed to trigger either the purity/sanctity or fairness/reciprocity foundations. Some subjects within the treatment group were selected, via random assignment, to read an extension to the base story which offered a positive resolution to moral conflict from the base. The intended effect of the extension was to specifically trigger the participant's "pro-attitudinal..  
+
+We implemented a timer on the treatment pages of the survey requiring participants to stay on the page for at least 15-20 seconds, depending on the length of the frame. This was done to prevent subjects from clicking through the pages without adequate time to read and digest the frame.  
+
+Figure X offers a detailed description of the four treatment arms and control arm for the experiment. Participants were randomly assigned to one of the five arms using five-way random sampling without replacement executed within the Qualtrics survey platform.  
+
+After navigating through treatment or control, the subjects were asked to share their degree of support for the concept of UBI on an eleven point likert scale from zero to ten.  
+
+All participants answered the following demographic questions before concluding the survey: age, gender, urbanicity and political orientation. The political orientation demographic was requested to confirm successful blocking executed via Prolific. Subjects who self-identified as moderates in the survey were dropped from the analysis.   
+
+Participants in the pilot study and select waves were also asked about their reactions to the frames to assess whether they triggered the intended moral foundation. The pilot was executed with a small group of X participants to test the strength of the stories with regards to hitting on the intended moral foundations and find whether the study was receiving a balanced mix of participants while examining different covariates.  
+
+See _\autoref{fig:study_flowchart}_ for detailed flowchart of study design.  
+
+## Materials  
+
+Please refer to the Appendix of this report to view the moral foundations-frames employed in our experiment.  
+
+## Modifications  
+
+After collecting data from the first wave of participants, we analyzed gender, political orientation and reactions to the frames. We noted that there was an imbalance of gender in the conservative block, and the liberal block had generally high support of the concept of UBI. In response to the former, we used Prolific to recruit additional female conservatives, however we consequently excluded this wave from analysis due to lack of randomized collection (i.e. participants were targeted rather than randomly recruited).  
+
+The latter observation eventually led us to remove the treatment arm targeting fairness/reciprocity and recruit additional participants in the conservative block in an effort to increase the statistical power of our results. Given the high support amongst liberals for UBI, it would be unlikely that we would see a measured change in attitude, particularly given our limited sample size.  
+
+In a world with limitless funds, we would have been able to collect enough participants to supply sufficient power to each arm of the study, however this was not the case. Thus, we dedicated our remaining resources to the treatment arm showing promise of a statistically significant effect. 
+
+# Analysis of Results  
+
+## Comparison of Potential Outcomes  
+
+_[TBD]_  
+
+## Data  
+
+```{r exploratory_demographics, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
+
+# Ideology
+plot_ideology = ggplot() +
+  geom_bar(data = results_clean_lim %>%  group_by(ideology) %>% 
+             summarise(Count = n()) %>% rename("Ideology" = ideology)
+           , aes(x = Ideology, y = Count, fill = Ideology), stat = "identity") +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
+
+grpstackbar_plot = ggplot() +
+  facet_grid( ~ ideology_bin) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Age
+plot_age = grpstackbar_plot +
+  geom_bar(data = results_clean_lim %>% group_by(age, ideology, ideology_bin) %>% 
+             summarise(Count = n()) %>% rename("Ideology" = ideology, "Age" = age)
+           , aes(x = Age, y = Count, fill = Ideology), stat = "identity", show.legend = FALSE)
+# Gender
+plot_gender = grpstackbar_plot +
+  geom_bar(data = results_clean_lim %>% group_by(gender, ideology, ideology_bin) %>% 
+             summarise(Count = n()) %>% rename("Ideology" = ideology, "Gender" = gender)
+           , aes(x = Gender, y = Count, fill = Ideology), stat = "identity", show.legend = FALSE)
+# Urban
+plot_urban = grpstackbar_plot +
+  geom_bar(data = results_clean_lim %>% group_by(urban, ideology, ideology_bin) %>% 
+             summarise(Count = n()) %>% rename("Ideology" = ideology, "Urban" = urban)
+           , aes(x = Urban, y = Count, fill = Ideology), stat = "identity", show.legend = FALSE)
+
+grid.arrange(plot_ideology, plot_gender
+             , plot_age, plot_urban
+             , nrow = 2)
+```
+
+```{r exploratory_reactions, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
+results_response = results_clean_lim %>%
+  select(ideology_bin, arm_level, arm_story
+         , "PURE: See myself" = purity_q1_self
+         , "PURE: Felt repulsed" = purity_q2_repulsed
+         # , purity_q3_injustice
+         , "PURE: Felt relieved" = purity_q4_relieved
+         , "FAIR: See myself" = fairness_q1_self
+         , "FAIR: Felt pain" = fairness_q2_pain
+         # , fairness_q3_injustice
+         , "FAIR: Felt relieved" = fairness_q4_relieved) %>% 
+  gather(prompt, value, -ideology_bin, -arm_level, -arm_story) %>%
+  filter(!is.na(value)) %>%
+  group_by(ideology_bin, arm_level, arm_story, prompt, value) %>%
+  summarise(count = n()) %>%
+  mutate(Response = factor(value, levels = response_levels)) %>%
+  group_by(ideology_bin, arm_level, arm_story, prompt) %>%
+  mutate(count_total_cohort = sum(count)
+         , Share = count/count_total_cohort
+         , Prompt = factor(prompt, levels = c("PURE: See myself", "PURE: Felt repulsed", "PURE: Felt relieved"
+                                              , "FAIR: See myself", "FAIR: Felt pain", "FAIR: Felt relieved")))
+
+ggplot(data = results_response
+       , aes(x = Prompt, y = Response, fill = Share)) +
+  geom_tile() +
+  facet_grid(rows = vars(arm_level, arm_story)
+             , cols = vars(ideology_bin)) +
+  scale_fill_distiller(direction = 1, palette = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)
+        , legend.position = "none")
+```
+
+```{r exploratory_outcome, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Outcomes"}
+# Histogram of familiarity
+plot_familiarity = ggplot(data = results_clean_lim %>% filter(!is.na(ubi_familiarity)) %>% 
+                            group_by(ubi_familiarity, ideology, ideology_bin) %>% 
+                            summarise(Count = n()) %>%
+                            rename("Ideology" = ideology, "UBI Familiarity" = ubi_familiarity)
+       , aes(x = `UBI Familiarity`, y = Count, fill = Ideology)) +
+  geom_bar(stat="identity", show.legend = FALSE) +
+  facet_grid( ~ ideology_bin) +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Heat map of number UBI like
+plot_ubi = ggplot(data = results_clean_lim %>% filter(!is.na(ubi_familiarity)) %>%
+                    group_by(ubi_familiarity, ideology) %>% 
+                    summarise("Average UBI Rank" = mean(ubi_number)) %>%
+                    rename("Ideology" = ideology, "UBI Familiarity" = ubi_familiarity)
+       , aes(x = `UBI Familiarity`, y = Ideology, fill = `Average UBI Rank`)) +
+  geom_tile() +
+  scale_fill_distiller(direction = 1, palette = 2) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)
+        , legend.position = "right")
+
+grid.arrange(plot_familiarity, plot_ubi
+              , nrow = 2)
+```
+
+## Models  
+
+### _Preliminary results with partial data informed our focus on Con + Pure (see \autoref{fig:prelimmodel})_  
+
+```{r model_arm_prelim, echo = FALSE, results='asis', fig.cap="\\label{fig:prelimmodel}"}
+prelim_model_libfair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+prelim_model_libpure_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+prelim_model_confair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+prelim_model_conpure_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+
+stargazer(prelim_model_libfair_prelim$lm, prelim_model_libpure_prelim$lm
+          , prelim_model_confair_prelim$lm, prelim_model_conpure_prelim$lm
+          , type = stargazer_type, header = F
+          , se = list(prelim_model_libfair_prelim$se_robust, prelim_model_libpure_prelim$se_robust
+                      , prelim_model_confair_prelim$se_robust, prelim_model_conpure_prelim$se_robust)
+          , title = "Preliminary Model - Factorial Design, by Arm (Waves 1-2 only)"
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
+```
+
+### _Given that we collected in waves, wanted to ensure the wave/day blocking did not introduce an effect on our results (see \autoref{fig:model1})_  
+
+```{r model_arm_recruitday, echo = FALSE, results='asis', fig.cap="\\label{fig:model1}"}
+model0_day = custom_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_wave, data = results_clean_lim_ctrl), clusters_in = NA)
+
+model1_libfair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibfair), clusters_in = NA)
+model1_libpure_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibpure), clusters_in = NA)
+model1_confair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armconfair), clusters_in = NA)
+model1_conpure_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armconpure), clusters_in = NA)
+
+stargazer(model0_day$lm
+          , model1_libfair_day$lm, model1_libpure_day$lm
+          , model1_confair_day$lm, model1_conpure_day$lm
+          , type = stargazer_type, header = F
+          , se = list(model0_day$se_robust
+                      , model1_libfair_day$se_robust, model1_libpure_day$se_robust
+                      , model1_confair_day$se_robust, model1_conpure_day$se_robust
+                      )
+          , title            = "Factorial Design, by Arm and Recruitment Day"
+          , column.labels    = c("Control Only"
+                                 , "Lib + Fair", "Lib + Pure"
+                                 , "Con + Fair", "Con + Pure")
+          , order = c(1,4,5,2,3,6,7)
+          , covariate.labels = c("Liberal", "Base Treatment", "Extension Treatment"
+                                 ,"Wave 2", "Wave 3", "Wave 4", "Wave 5")
+          , dep.var.caption  = "Four Study Arms + Control"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          , report           = ('v*c*sp')
+)
+```
+<!-- NOTES:   -->
+<!-- - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level   -->
+<!-- - Day of recuitment/wave not significant across any arms   -->
+<!-- - Therefore, no need to stratify -->
+
+### _We still collected more data for all arms to confirm that of factorial design, Con + Pure was most impactful (see \autoref{fig:model2})_  
+
+```{r model_arm, echo = FALSE, results='asis', fig.cap="\\label{fig:model2}"}
+model2_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
+model2_libpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
+model2_confair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
+model2_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure),  clusters_in = NA)
+
+stargazer(model2_libfair$lm, model2_libpure$lm
+          , model2_confair$lm, model2_conpure$lm
+          , type = stargazer_type, header = F
+          , se = list(model2_libfair$se_robust, model2_libpure$se_robust
+                      , model2_confair$se_robust, model2_conpure$se_robust)
+          , title = "Factorial Design, by Arm"
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
+```
+<!-- NOTES:   -->
+<!-- - Still not sure if using the balanced is necessary if we're saying that day of the week is not significant   -->
+<!-- - We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.   -->
+
+### _We tested hypotheses about covariates that might affect outcomes with our arm of interest: Con + Pure (see \autoref{fig:model3})_  
+
+```{r model_conpure_interactions, echo = FALSE, results='asis', fig.cap="\\label{fig:model3}"}
+
+# Gender
+model3_conpure_gender = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender
+                                               , data = results_armconpure), clusters_in = NA)
+# Familiarity
+model3_conpure_familiarity = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + ubi_familiarity_bin
+                                                    , data = results_armconpure), clusters_in = NA)
+# Reaction
+model3_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin 
+                                                     , data = results_armconpure %>% filter(arm_level != "extension")), clusters_in = NA)
+model3_conpure_reaction_ext = custom_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin + purity_q4_relieved_bin
+                                                      , data = results_armconpure %>% filter(arm_level != "base")), clusters_in = NA)
+
+stargazer(model2_conpure$lm
+          , model3_conpure_gender$lm
+          , model3_conpure_familiarity$lm
+          , model3_conpure_reaction_bas$lm
+          , model3_conpure_reaction_ext$lm
+          , type = stargazer_type, header = F
+          , se = list(model2_conpure$se_robust
+                      , model3_conpure_gender$se_robust
+                      , model3_conpure_familiarity$se_robust
+                      , model3_conpure_reaction_bas$se_robust
+                      , model3_conpure_reaction_ext$se_robust
+          )
+          , title = "Conservative + Purity Treatment Arm Interaction Specifications"
+          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction (Base)", "Reaction (Extension)")
+          , covariate.labels = c("Base Treatment", "Extension Treatment"
+                                 , "Male", "Familiar w/ UBI"
+                                 , "Repulsed", "Relieved")
+          , dep.var.caption  = "Con + Pure Arm Only"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
+```
+<!-- NOTES:   -->
+<!-- Gender   -->
+<!-- - Gender gap still interesting - a significant baselne difference between genders    -->
+<!-- Familiarity   -->
+<!-- - Being familiar with UBI makes conservatives lower at baseline   -->
+<!-- - Really just noise based on no change in treatment effect   -->
+<!-- below notes from previous factorial setup   -->
+<!-- - Interation of familiarity and purity is actually fascintating directionally-speaking    -->
+<!--   - Liberals higher at baseline if familiar BUT the treatment actually lowered their scores while those unfamiliar moved up when treated   -->
+<!--   - The absolute opposite happens for conservatives: if you're familiar you start lower and then treatment nudges you higher but those unfamiliar move down   -->
+<!-- Reaction   -->
+<!-- - Running out of N and no interaction with other arm - hard to read -->
+
+# Conclusion  
+
+Our experiment leveraging the concept of Universal Basic Income demonstrates that political attitudes can shift (TBC) through exposure to moral foundations.  
+
+## Discussion
+
+_[[TBD]]_  
+
+## Limitations
+
+_[[TBD]]_   
+
+# Appendix  
+
+## Declaration of Conflicting Interests  
+
+To the best of their knowledge, the authors have no potential conflicts of interest with respect to the research, distribution of survey, and authorship of this paper.  
+
+## Funding  
+
+The authors received $500 in financial support from the University of California, Berkeley which was leveraged to pay survey-takers through the Prolific platform and satisfy the statistical power requirements.  
+
+In addition, the authors put in $25 out of their own personal income to increase the statistical power of the results and balance the number of subjects between liberals and conservatives.  
+
+## Study Flowchart  
+
+```{r flowchart, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
+flowchart_img = readPNG("images/flowchart.png")
+grid.raster(flowchart_img)
+```
+
+## Data Dictionary
+
+| Variable Name | Variable | Values | Notes |
+| :---- | :-------- | :-------- | :----- |
+| prolific_pid | User ID | 10-digit numeric ||
+| panel |||||
+| arm |||||
+| node |||||
+| arm_level |||||
+| ideology |||||
+| ideology_bin |||||
+| age |||||
+| gender |||||
+| urban |||||
+| employment_status |||||
+| student_status |||||
+| purity_q1_self |||||
+| purity_q2_repulsed |||||
+| purity_q3_injustice |||||
+| purity_q4_relieved |||||
+| fairness_q1_self |||||
+| fairness_q2_pain |||||
+| fairness_q3_injustice |||||
+| fairness_q4_relieved |||||
+| open_text_reaction |||||
+| ubi_number | UBI Number | Integer 0-10 |||
+| ubi_group |||||
+| ubi_familiarity |||||
+| ubi_familiarity_bin |||||
+
+\pagebreak
+
+## Additional Exploratory Data Analysis
+
+**Additional steps taken not included in the body of the report**  
+
+_[[TBD]]_  
+
+## Legacy Code  
+
+<!-- Balanced data (for if we needed to stratify by recruitment day) -->
+
+```{r balance_data, include = FALSE}
+# Remove observations that don't give us apples to apples comparisons (e.g. data in the control group from different periods)
+
+# Conservative + Purity = ALL except Friday
+results_armconpure_balance = results_armconpure[results_armconpure$recruitment_wave!='Friday',]
+# Conservative + Fairness = Tuesday1
+results_armconfair_balance = results_armconfair[results_armconfair$recruitment_wave=='Tuesday1',]
+# Liberal + Purity = Tuesday1 + Tuesday2
+results_armlibpure_balance = results_armlibpure[results_armlibpure$recruitment_wave %in% c('Tuesday1', 'Tuesday2'),]
+# Liberal + Fairness = Tuesday1 + Tuesday2
+results_armlibfair_balance = results_armlibfair[results_armlibfair$recruitment_wave %in% c('Tuesday1', 'Tuesday2'),]
+```
+
+<!-- Arm balance by wave  -->
+
+```{r balance_arm_recruitday, include = FALSE}
+balance_arm_recuit = results_clean_lim %>% group_by(recruitment_wave, ideology_bin, arm) %>%
+  summarise(observations = n()) %>%
+  pivot_wider(names_from = recruitment_wave, values_from = observations) %>%
+  arrange(ideology_bin, arm) %>%
+  rename("Ideology" = ideology_bin, "Arm" = arm)
+kable(balance_arm_recuit)
+```
+
+<!-- Stratified regression code -->
+
+```{r model_recruitday_stratify, echo = FALSE, results='asis'}
+# Using the survey design package and stratifying by recruitment day to verify importance of day of recruitment
+results_armconpure_strat = svydesign(id=~1, strata=~recruitment_wave, data = results_armconpure)
+model2_sratday = svyglm(ubi_number ~ arm_level, design = results_armconpure_strat)
+
+stargazer(model2_sratday
+          , type = stargazer_type, header = F
+          # , se = list() ???
+          , title = "Model 2 - Example Specification Stratified by Recruitment Day"
+          , column.labels = c("Con + Pure")
+          , covariate.labels = c("Base", "Extension")
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          )
+```
+<!-- NOTES: -->
+<!-- - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter -->

@@ -1,15 +1,15 @@
 ---
-title: "Can Exposure to Moral Foundations Affect Our Reactions to Policy Proposals?"
-subtitle: "W241 Experiments and Causality (submitted December 10, 2019)"
+title: "Swinging Foundational Views: An Experiment on the Persuasive Effects of Moral Frames"
+subtitle: "W241 Experiments and Causality"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
 date: "December 10, 2019"
 tags: [Moral Foundations, Universal Basic Income, Survey, Experiment]
-abstract: [TBD]
+abstract: Through this experiment we tested the treatment effect of various presentations of the moral foundations ("the frame") on a person's feelings towards a particular topic.  
 output:
   pdf_document:
     fig_caption: yes
     number_sections: yes
-    toc: yes
+    toc: no
   md_document:
     variant: markdown
   html_document:
@@ -25,15 +25,12 @@ packages = c('openxlsx'
              , 'visNetwork'
              , 'lmtest', 'sandwich', 'car', 'survey'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
-             , 'knitr')
+             , 'knitr', 'webshot')
 packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-# install.packages("webshot")
-# webshot::install_phantomjs()
-
-stargazer_type = "text" #"latex" # change to latex when ready to knit
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
 ```
 
 \pagebreak
