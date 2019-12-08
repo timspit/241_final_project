@@ -33,7 +33,7 @@ lapply(packages, library, character.only = TRUE)
 # install.packages("webshot")
 # webshot::install_phantomjs()
 
-stargazer_type = "latex" #"latex" # change to latex when ready to knit
+stargazer_type = "text" #"latex" # change to latex when ready to knit
 ```
 
 \pagebreak
