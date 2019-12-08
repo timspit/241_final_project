@@ -15,6 +15,7 @@ output:
   html_document:
     df_print: paged
     toc: yes
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include = FALSE}
@@ -250,7 +251,7 @@ custom_lm_calcs = function(lm_in, clusters_in){
 # Introduction  
 We make hundreds of decisions each day. We may spend minutes, even hours, considering information to arrive at a decision. But sometimes it's just seconds. A gut response. That response, the baseline opinion anchoring the choices we make, is different for everyone and can be extremely difficult to change.  
 
-In the early 2000s, psychologists Jonathan Haidt, Craigh Joseph and Jesse Graham proposed a framework to explain why our opinions are different, but also similar. Their "moral foundations theory" built upon an earlier proposal stating that morality stems from matters of harm, rights and justice. Haidt and his colleagues, however, describe five doctrines or foundations that ultimately influence human decision and behavior: harm/care, fairness/reciprocity, ingroup/loyalty, authority/respect and purity/sanctity.  
+In the early 2000s, psychologists Jonathan Haidt, Craigh Joseph and Jesse Graham proposed a framework to explain why our opinions are different, but also similar. Their "moral foundations theory" built upon an earlier proposal stating that morality stems from matters of harm, rights and justice. Haidt and his colleagues, however, describe five doctrines or foundations that ultimately influence human decision and behavior: **harm/care**, **fairness/reciprocity**, **ingroup/loyalty**, **authority/respect** and **purity/sanctity**. _@haidt2007morality _  
 
 Moral foundations theory has often been applied to studies of political science, the differences between cultures and intuitive ethics. They offer a concrete understanding of the morals that unite and divide us all. In his book, The Righteous Mind (2012), Haidt explored how the five foundations are used by both conservatives and liberals to support moral questions in the political realm. Those leaning more to the political left are guided predominantly by harm/care and fairness/reciprocity, while those leaning right rely on all five foundations. It follows then that conservatives weigh the first two foundations less when making decisions or judgments; harm/care and fairness/reciprocity comprise one-fifth of the equation, respectively, instead of one-half.  
 
@@ -419,11 +420,13 @@ grid.arrange(plot_familiarity, plot_ubi
               , nrow = 2)
 ```
 
+\newpage
+
 ## Models  
 
-### _Preliminary results with partial data informed our focus on Con + Pure (see \autoref{fig:prelimmodel})_  
+### _Preliminary results with partial data informed our focus on Con + Pure (see \autoref{tab:prelimmodel})_  
 
-```{r model_arm_prelim, echo = FALSE, results='asis', fig.cap="\\label{fig:prelimmodel}"}
+```{r model_arm_prelim, echo = FALSE, results='asis'}
 prelim_model_libfair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair %>% 
                                                            filter(recruitment_wave %in% c("Wave1", "Wave2")))
                                               , clusters_in = NA)
@@ -450,12 +453,17 @@ stargazer(prelim_model_libfair_prelim$lm, prelim_model_libpure_prelim$lm
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:prelimmodel"
 )
 ```
 
-### _Given that we collected in waves, wanted to ensure the wave/day blocking did not introduce an effect on our results (see \autoref{fig:model1})_  
+\newpage
 
-```{r model_arm_recruitday, echo = FALSE, results='asis', fig.cap="\\label{fig:model1}"}
+### _Given that we collected in waves, wanted to ensure the wave/day blocking did not introduce an effect on our results (see \autoref{tab:model1})_  
+
+```{r model_arm_recruitday, echo = FALSE, results='asis'}
 model0_day = custom_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_wave, data = results_clean_lim_ctrl), clusters_in = NA)
 
 model1_libfair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibfair), clusters_in = NA)
@@ -482,6 +490,9 @@ stargazer(model0_day$lm
           , dep.var.labels   = "UBI Ranking"
           , notes            = "HC Robust Standard Errors"
           , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:model1"
 )
 ```
 <!-- NOTES:   -->
@@ -489,9 +500,12 @@ stargazer(model0_day$lm
 <!-- - Day of recuitment/wave not significant across any arms   -->
 <!-- - Therefore, no need to stratify -->
 
-### _We still collected more data for all arms to confirm that of factorial design, Con + Pure was most impactful (see \autoref{fig:model2})_  
 
-```{r model_arm, echo = FALSE, results='asis', fig.cap="\\label{fig:model2}"}
+\newpage
+
+### _We still collected more data for all arms to confirm that of factorial design, Con + Pure was most impactful (see \autoref{tab:model2})_  
+
+```{r model_arm, echo = FALSE, results='asis'}
 model2_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
 model2_libpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
 model2_confair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
@@ -510,15 +524,21 @@ stargazer(model2_libfair$lm, model2_libpure$lm
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:model2"
 )
 ```
 <!-- NOTES:   -->
 <!-- - Still not sure if using the balanced is necessary if we're saying that day of the week is not significant   -->
 <!-- - We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.   -->
 
-### _We tested hypotheses about covariates that might affect outcomes with our arm of interest: Con + Pure (see \autoref{fig:model3})_  
 
-```{r model_conpure_interactions, echo = FALSE, results='asis', fig.cap="\\label{fig:model3}"}
+\newpage
+
+### _We tested hypotheses about covariates that might affect outcomes with our arm of interest: Con + Pure (see \autoref{tab:model3})_  
+
+```{r model_conpure_interactions, echo = FALSE, results='asis'}
 
 # Gender
 model3_conpure_gender = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender
@@ -553,6 +573,9 @@ stargazer(model2_conpure$lm
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:model3"
 )
 ```
 <!-- NOTES:   -->
@@ -567,6 +590,9 @@ stargazer(model2_conpure$lm
 <!--   - The absolute opposite happens for conservatives: if you're familiar you start lower and then treatment nudges you higher but those unfamiliar move down   -->
 <!-- Reaction   -->
 <!-- - Running out of N and no interaction with other arm - hard to read -->
+
+
+\newpage
 
 # Conclusion  
 
@@ -637,7 +663,7 @@ grid.raster(flowchart_img)
 
 _[[TBD]]_  
 
-## Legacy Code  
+## Legacy Code (to be cut before final)  
 
 <!-- Balanced data (for if we needed to stratify by recruitment day) -->
 
@@ -684,3 +710,7 @@ stargazer(model2_sratday
 ```
 <!-- NOTES: -->
 <!-- - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter -->
+
+\pagebreak
+
+# References  
