@@ -1,15 +1,15 @@
 ---
-title: "Can Exposure to Moral Foundations Affect Our Reactions to Policy Proposals?"
-subtitle: "W241 Experiments and Causality (submitted December X, 2019)"
+title: "Swinging Foundational Views: An Experiment on the Persuasive Effects of Moral Frames"
+subtitle: "W241 Experiments and Causality"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
 date: "December 10, 2019"
-tags: [T, B, D]
-abstract: TBD
+tags: [Moral Foundations, Universal Basic Income, Survey, Experiment]
+abstract: Through this experiment we tested the treatment effect of various presentations of the moral foundations ("the frame") on a person's feelings towards a particular topic.  
 output:
   pdf_document:
     fig_caption: yes
     number_sections: yes
-    toc: yes
+    toc: no
   md_document:
     variant: markdown
   html_document:
@@ -23,16 +23,14 @@ rm(list=ls())
 packages = c('openxlsx'
              , 'tidyverse', 'data.table'
              , 'visNetwork'
-             , 'lmtest', 'sandwich', 'car'
+             , 'lmtest', 'sandwich', 'car', 'survey'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
-             , 'knitr')
+             , 'knitr', 'webshot')
+packages_needed = packages[!packages %in% installed.packages()]
+if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-#### Uncomment and install if knitting to PDF ###
-# install.packages("webshot")
-# webshot::install_phantomjs()
-
-stargazer_type = "text" # change to latex when ready to knit
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
 ```
 
 \pagebreak
@@ -44,34 +42,39 @@ _[[TBD]]_
 _[[TBD]]_  
 
 ```{r import, include = FALSE}
-results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1_November 20, 2019_07.25.csv", stringsAsFactors = FALSE) %>%   filter(!grepl("Start|Import", StartDate)) %>% 
+# Survey Results
+# Panel 1
+results_raw_panel1 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 1.csv", stringsAsFactors = FALSE) %>%
+  filter(!grepl("Start|Import", StartDate)) %>%
   mutate(panel = 1)
-results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control_November 22, 2019_17.34.csv", stringsAsFactors = FALSE) %>% 
-  filter(!grepl("Start|Import", StartDate)) %>% 
+# Panel 2
+results_raw_panel2 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2.csv", stringsAsFactors = FALSE) %>%
+  filter(!grepl("Start|Import", StartDate)) %>%
   mutate(panel = 2)
-results_raw_panel2_nov20 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 20, 2019_07.26.csv", stringsAsFactors = FALSE) %>% 
-  filter(!grepl("Start|Import", StartDate)) %>% 
-  mutate(panel = 2)
-results_raw_panel2_nov26 = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2_November 26, 2019_07.51.csv", stringsAsFactors = FALSE) %>% 
-  filter(!grepl("Start|Import", StartDate)) %>% 
-  mutate(panel = 2)
-
-participant_detail_1 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1-with_November_24_2019.csv", stringsAsFactors = FALSE)
-participant_detail_2 = read.csv("./data/study/prolific_export_5dd4a34135582248315dfdca.csv", stringsAsFactors = FALSE)
-participant_detail_3 = read.csv("./data/study/prolific_export_5dd86d9f8f45b98265115ada.csv", stringsAsFactors = FALSE)
-participant_detail_4 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1.csv", stringsAsFactors = FALSE)
-participant_detail_5 = read.csv("./data/study/prolific_export_5dd4a350108b6748b25b5de1-up-to_November_26_2019.csv", stringsAsFactors = FALSE)
+# Panel 2 - 10 Control Females
+results_raw_panel2_10fem = read.csv("./data/study/MF Framing Pilot - Full Recruitment - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE) %>%
+ filter(!grepl("Start|Import", StartDate)) %>%
+ mutate(panel = 2)
+# Participant Details
+# Panel 1
+participant_detail_panel1 = read.csv("./data/study/Prolific Participants - Panel 1.csv", stringsAsFactors = FALSE)
+# Panel 2
+participant_detail_panel2 = read.csv("./data/study/Prolific Participants - Panel 2.csv", stringsAsFactors = FALSE)
+# Panel 2 - 10 Control Females
+participant_detail_panel2_10fem = read.csv("./data/study/Prolific Participants - Panel 2 - 10 Female Control.csv", stringsAsFactors = FALSE)
 ```
+NORES:  
+- One problem I see with excluding the 10 control women: 5 of them retook - so we would be including their second take  
+- Given our test for day of recruitment not being significant I think we can keep them  
+- plus, even if we drop them after the fact by virtue of limiting to the "balanced" datasets they will have at least added another cohort for our recruit day test   
 
 ```{r deduplicate, include = FALSE}
-# Stack panel data (509 obs x 63 vars)
+# Stack panel data (500 obs x 63 vars)
 results_stacked = bind_rows(results_raw_panel1
+                            , results_raw_panel2
                             , results_raw_panel2_10fem
-                            , results_raw_panel2_nov20
-                            # , results_raw_panel2_nov24
-                            , results_raw_panel2_nov26
                             ) %>%
-  # Duplicate responses are a product of our multiple data extracts, remove as-is 410 obs x 63 vars)
+  # Duplicate responses are a product of our multiple data extracts, remove as-is 500 obs x 63 vars)
   distinct(ResponseId, .keep_all= TRUE)
 # Identify if the same person filled out the survey >1x
 results_ids_dedup = results_stacked %>%
@@ -79,7 +82,7 @@ results_ids_dedup = results_stacked %>%
   group_by(PROLIFIC_PID) %>%
   summarize(count = n()
             , min_date = min(StartDate))
-# Keep only their first submission (405 obs x 64 vars [count will tell us who filled out 2x])
+# Keep only their first submission (500 obs x 64 vars [count will tell us who filled out 2x])
 results_dedup = results_stacked %>%
   merge(results_ids_dedup
         , by.x = c("PROLIFIC_PID", "StartDate")
@@ -87,15 +90,13 @@ results_dedup = results_stacked %>%
         , all.x = TRUE) %>%
   filter(!is.na(count))
 
-# Stack participant details (723 obs x 21 vars)
-participaipant_detail_stacked =  bind_rows(participant_detail_1
-                  , participant_detail_2
-                  , participant_detail_3
-                  , participant_detail_4
-                  , participant_detail_5)  %>%
-  # Duplicate responses are a product of our multiple data extracts, remove as-is (418 obs x 21 vars)
+# Stack participant details (508 obs x 21 vars)
+participaipant_detail_stacked =  bind_rows(participant_detail_panel1
+                                           , participant_detail_panel2
+                                           , participant_detail_panel2_10fem) %>%
+  # Duplicate responses are a product of our multiple data extracts, remove as-is (508 obs x 21 vars)
   distinct(session_id, .keep_all= TRUE) %>%
-  # Remove vars that will be in results as well (418 obs x 19 vars)
+  # Remove vars that will be in results as well (518 obs x 19 vars)
   select(-status, -age)
 # Identify if the same person filled out the survey >1x
 participaipant_ids_dedup = participaipant_detail_stacked %>%
@@ -103,7 +104,7 @@ participaipant_ids_dedup = participaipant_detail_stacked %>%
   group_by(participant_id) %>%
   summarize(count = n()
             , min_date = min(started_datetime))
-# Keep only their first submission (413 obs x 18 vars [count will tell us who filled out 2x])
+# Keep only their first submission (508 obs x 18 vars [count will tell us who filled out 2x])
 participaipant_detail_dedup = participaipant_detail_stacked %>%
   merge(participaipant_ids_dedup
         , by.x = c("participant_id", "started_datetime")
@@ -111,7 +112,7 @@ participaipant_detail_dedup = participaipant_detail_stacked %>%
         , all.x = TRUE) %>%
   filter(!is.na(count)) %>% select(-count, -session_id)
 
-# Merge for final dataset (405 obs x 81 vars)
+# Merge for final dataset (500 obs x 81 vars)
 results_full_dedup = merge(results_dedup
                            , participaipant_detail_dedup
                            , by.x = "PROLIFIC_PID"
@@ -130,8 +131,10 @@ names(results_full_dedup) = tolower(gsub(x = names(results_full_dedup), pattern 
 
 # Discrete variables as factors (manual ordering for plotting)
 ideology_levels = c("Very Liberal", "Lean Liberal", "Liberal", "Moderate", "Conservative", "Lean Conservative", "Very Conservative")
+response_levels = c("None at all", "A little", "A moderate amount", "A lot", "A great deal")
 ubi_group_levels = c("Promoter", "Passive", "Detractor")
 ubi_familiarity_levels = c("Extremely familiar", "Very familiar", "Moderately familiar", "Slightly familiar", "Not familiar at all")
+recruit_day_levels = c("Tuesday1", "Friday", "Sunday", "Monday", "Tuesday2")
 
 results_full = results_full_dedup  %>%
   # Define arms and nodes
@@ -146,20 +149,44 @@ results_full = results_full_dedup  %>%
                                  , TRUE ~ 'control') %>% factor(levels = c("control", "base", "extension"))
          # Combine reaction vars from different arms
          , purity_q1_self = case_when(grepl('a', fc_b_1, ignore.case = TRUE) ~ fc_b_1
-                                 # , grepl('a', fc_c_1, ignore.case = TRUE) ~ fc_c_1
-                                 , TRUE ~ fc_c_1)
+                                      , grepl('a', fc_c_1, ignore.case = TRUE) ~ fc_c_1
+                                      , TRUE ~ NA_character_)
          , purity_q2_repulsed = case_when(grepl('a', fc_b_2, ignore.case = TRUE) ~ fc_b_2
-                                 , TRUE ~ fc_c_2)
+                                          , grepl('a', fc_c_2, ignore.case = TRUE) ~ fc_c_2
+                                          , TRUE ~ NA_character_)
          , purity_q3_injustice = case_when(grepl('a', fc_b_3, ignore.case = TRUE) ~ fc_b_3
-                                 , TRUE ~ fc_c_3)
-         , purity_q4_relieved = fc_c_4
+                                           , grepl('a', fc_c_3, ignore.case = TRUE) ~ fc_c_3
+                                           , TRUE ~ NA_character_)
+         , purity_q4_relieved = case_when(grepl('a', fc_c_4, ignore.case = TRUE) ~ fc_c_4
+                                          , TRUE ~ NA_character_)
          , fairness_q1_self = case_when(grepl('a', fc_d_1, ignore.case = TRUE) ~ fc_d_1
-                                 , TRUE ~ fc_e_1)
+                                        , grepl('a', fc_e_1, ignore.case = TRUE) ~ fc_e_1
+                                        , TRUE ~ NA_character_)
          , fairness_q2_pain = case_when(grepl('a', fc_d_2, ignore.case = TRUE) ~ fc_d_2
-                                     , TRUE ~ fc_e_2)
+                                        , grepl('a', fc_e_2, ignore.case = TRUE) ~ fc_e_2
+                                        , TRUE ~ NA_character_)
          , fairness_q3_injustice = case_when(grepl('a', fc_d_3, ignore.case = TRUE) ~ fc_d_3
-                                 , TRUE ~ fc_e_3)
-         , fairness_q4_relieved = fc_e_4
+                                             , grepl('a', fc_e_3, ignore.case = TRUE) ~ fc_e_3
+                                             , TRUE ~ NA_character_)
+         , fairness_q4_relieved = case_when(grepl('a', fc_e_4, ignore.case = TRUE) ~ fc_e_4
+                                          , TRUE ~ NA_character_)
+         # Bin reaction vars
+         , purity_q2_repulsed_bin = case_when(is.na(purity_q2_repulsed) ~ NA_real_
+                                              , purity_q2_repulsed %in% c("None at all", "A little") ~ 0
+                                              , purity_q2_repulsed %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                              , TRUE ~ NA_real_) %>% factor()
+         , purity_q4_relieved_bin = case_when(is.na(purity_q4_relieved) ~ NA_real_
+                                              , purity_q4_relieved %in% c("None at all", "A little") ~ 0
+                                              , purity_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                              , TRUE ~ NA_real_) %>% factor()
+         , fairness_q2_pain_bin = case_when(is.na(fairness_q2_pain) ~ NA_real_
+                                            , fairness_q2_pain %in% c("None at all", "A little") ~ 0
+                                            , fairness_q2_pain %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                            , TRUE ~ NA_real_) %>% factor()
+         , fairness_q4_relieved_bin = case_when(is.na(fairness_q4_relieved) ~ NA_real_
+                                                , fairness_q4_relieved %in% c("None at all", "A little") ~ 0
+                                                , fairness_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
+                                                , TRUE ~ NA_real_) %>% factor()
          , open_text_reaction = q3_fc2
          # Factor variables
          , ideology = factor(polispect, levels = ideology_levels)
@@ -171,123 +198,132 @@ results_full = results_full_dedup  %>%
                                     , ideology == "Lean Conservative" ~ "conservative"
                                     , ideology == "Conservative" ~ "conservative"
                                     , TRUE ~ "moderate")
+         # UBI/Outcome
          , ubi_group = factor(ubi_2_nps_group, levels = ubi_group_levels)
          , ubi_familiarity = factor(ubi_f, levels = ubi_familiarity_levels)
-         , ubi_familiarity_bin = case_when(ubi_f == "Not familiar at all" ~ 0
-                                    , TRUE ~ 1)
-         # Numeric variables
-         , ubi_number = as.numeric(ubi_2))
-
+         , ubi_familiarity_bin = case_when(is.na(ubi_f) ~ NA_real_
+                                           , ubi_f == "Not familiar at all" ~ 0
+                                           , TRUE ~ 1) %>% factor()
+         , ubi_number = as.numeric(ubi_2)
+         , recruitment_day = case_when(is.na(recruitday) ~ "missing"
+                                    , recruitday == "T1" ~ "Tuesday1"
+                                    , recruitday == "F" ~ "Friday"
+                                    , recruitday == "SU" ~ "Sunday"
+                                    , recruitday == "M" ~ "Monday"
+                                    , recruitday == "T2" ~ "Tuesday2"
+                                    , TRUE ~ "unknown") %>% factor(levels = recruit_day_levels)    
+  )
+# Clean = limit to the variables we need
 results_clean = results_full %>%
   select(prolific_pid, panel, arm, node, arm_level
          , ideology, ideology_bin, age, gender, urban, employment_status, student_status
          , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
+         , purity_q2_repulsed_bin, purity_q4_relieved_bin, fairness_q2_pain_bin, fairness_q4_relieved_bin
          , open_text_reaction
-         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin)
+         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitment_day, recruitday)
 
-results_clean = results_clean %>% mutate(
-  purity_q2_repulsed_bin = case_when(is.na(purity_q2_repulsed) ~ NA_real_
-                                     , purity_q2_repulsed %in% c("None at all", "A little") ~ 0
-                                     , purity_q2_repulsed %in% c("A moderate amount", "A great deal", "A lot") ~ 1
-                                     , TRUE ~ NA_real_)
-  , purity_q4_relieved_bin = case_when(is.na(purity_q4_relieved) ~ NA_real_
-                                       , purity_q4_relieved %in% c("None at all", "A little") ~ 0
-                                       , purity_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
-                                       , TRUE ~ NA_real_)
-  , fairness_q2_pain_bin = case_when(is.na(fairness_q2_pain) ~ NA_real_
-                                     , fairness_q2_pain %in% c("None at all", "A little") ~ 0
-                                     , fairness_q2_pain %in% c("A moderate amount", "A great deal", "A lot") ~ 1
-                                     , TRUE ~ NA_real_)
-  , fairness_q4_relieved_bin = case_when(is.na(fairness_q4_relieved) ~ NA_real_
-                                         , fairness_q4_relieved %in% c("None at all", "A little") ~ 0
-                                         , fairness_q4_relieved %in% c("A moderate amount", "A great deal", "A lot") ~ 1
-                                         , TRUE ~ NA_real_)
-)
-
-# Subset for arms (including control in each)
+# Arm-specific datasets
 results_armlibfair = results_clean %>% filter(ideology_bin == 'liberal' & grepl('fairness|control', arm))
 results_armlibpure = results_clean %>% filter(ideology_bin == 'liberal' & grepl('purity|control', arm))
 results_armconfair = results_clean %>% filter(ideology_bin == 'conservative' & grepl('fairness|control', arm))
-results_armconpur = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
+results_armconpure = results_clean %>% filter(ideology_bin == 'conservative' & grepl('purity|control', arm))
+
+# Remove moderates for EDA
+results_clean_lim = results_clean %>% filter(ideology_bin != "moderate")
+results_clean_lim_ctrl = results_clean %>% filter(ideology_bin != "moderate" & grepl('control', arm))
+```
+
+```{r balance_arm_recruitday, echo = FALSE}
+balance_arm_recuit = results_clean %>% group_by(recruitment_day, ideology_bin, arm) %>%
+  summarise(observations = n()) %>%
+  pivot_wider(names_from = recruitment_day, values_from = observations) %>%
+  arrange(ideology_bin, arm)
+balance_arm_recuit
+```
+
+```{r balance_data, include = FALSE}
+# Remove observations that don't give us apples to apples comparisons (e.g. data in the control group from different periods)
+
+# Conservative + Purity = ALL except Friday
+results_armconpure_balance = results_armconpure[results_armconpure$recruitment_day!='Friday',]
+# Conservative + Fairness = Tuesday1
+results_armconfair_balance = results_armconfair[results_armconfair$recruitment_day=='Tuesday1',]
+# Liberal + Purity = Tuesday1 + Tuesday2
+results_armlibpure_balance = results_armlibpure[results_armlibpure$recruitment_day %in% c('Tuesday1', 'Tuesday2'),]
+# Liberal + Fairness = Tuesday1 + Tuesday2
+results_armlibfair_balance = results_armlibfair[results_armlibfair$recruitment_day %in% c('Tuesday1', 'Tuesday2'),]
 ```
 
 ## Exploratory Analysis  
+
 _[[TBD]]_  
 
 ### Study Setup  
 
-```{r exploratory, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Setup"}
-arm_counts_bypanel = results_clean %>%
-  group_by(arm, panel, node) %>%
-  summarise(count = n())
-
+```{r flowchart, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="Study Flowchart"}
 nodes = data.frame(
   id = 1:8
   , group = c("ideology", "ideology"
-              , "fairness", "fairness"
-              , "purity", "purity"
-              , "control"
               , "treatment"
+              , "control"
+              , "purity", "purity"
+              , "fairness", "fairness"
               )
   , label = c("All Liberals", "All Conservatives"
-              , "Fairness Base"
-              , "Fairness Extension"
+              , "Treatment"
+              , "Control"
               , "Purity Base"
               , "Purity Extension"
-              , "Control"
-              , "Treatment"
-  )
-  , level = c(1, 1, 3, 4, 3, 4, 2, 2)
+              , "Fairness Base"
+              , "Fairness Extension"
+              )
+  , level = c(1, 1, 2, 2, 3, 4, 3, 4)
   , shape = rep("box", 8)
   )
 
 edges = data.frame(
-  from = c(1, 2, 1, 2, 8, 8, 3, 5)
-  , to = c(7, 7, 8, 8, 3, 5, 4, 6)
+  from = c(1, 2, 1, 2, 3, 3, 5, 7)
+  , to = c(3, 3, 4, 4, 5, 7, 6, 8)
   , dashes = c(rep(FALSE, 6), rep(TRUE, 2))
   )
 
 visNetwork(nodes, edges) %>%
-  visEdges(arrows = "to") %>% 
-  visHierarchicalLayout(direction = "LR") 
+  visEdges(arrows = "to") %>%
+  visHierarchicalLayout()
 ```
 
 ### Demographics  
 
 ```{r exploratory_demographics, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
 
+# Ideology
+plot_ideology = ggplot() +
+  geom_bar(data = results_clean_lim %>%  group_by(ideology) %>% summarise(count = n())
+           , aes(x = ideology, y = count, fill = ideology), stat = "identity") +
+  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
+
 grpstackbar_plot = ggplot() +
   facet_grid( ~ ideology_bin) +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Ideology
-plot_ideology = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(ideology, ideology_bin) %>% summarise(count = n())
-           , aes(x = ideology, y = count, fill = ideology)
-           , stat = "identity") + 
-  theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
 # Age
 plot_age = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(age, ideology, ideology_bin) %>% summarise(count = n())
-           , aes(x = age, y = count, fill = ideology)
-           , stat = "identity", show.legend = FALSE)
-
+  geom_bar(data = results_clean_lim %>% group_by(age, ideology, ideology_bin) %>% summarise(count = n())
+           , aes(x = age, y = count, fill = ideology), stat = "identity", show.legend = FALSE)
 # Gender
 plot_gender = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(gender, ideology, ideology_bin) %>% summarise(count = n())
-           , aes(x = gender, y = count, fill = ideology)
-           , stat = "identity", show.legend = FALSE)
-
+  geom_bar(data = results_clean_lim %>% group_by(gender, ideology, ideology_bin) %>% summarise(count = n())
+           , aes(x = gender, y = count, fill = ideology), stat = "identity", show.legend = FALSE)
 # Urban
 plot_urban = grpstackbar_plot +
-  geom_bar(data = results_clean %>%  group_by(urban, ideology, ideology_bin) %>% summarise(count = n())
-           , aes(x = urban, y = count, fill = ideology)
-           , stat = "identity", show.legend = FALSE)
+  geom_bar(data = results_clean_lim %>% group_by(urban, ideology, ideology_bin) %>% summarise(count = n())
+           , aes(x = urban, y = count, fill = ideology), stat = "identity", show.legend = FALSE)
 
-grid.arrange(plot_ideology, plot_age
-             , plot_gender, plot_urban
+grid.arrange(plot_ideology, plot_gender
+             , plot_age, plot_urban
              , nrow = 2)
 ```
 
@@ -295,60 +331,44 @@ Example reference to r cell _\autoref{fig:exploratory_demographics}_ shows _[[TB
 
 ### Reactions  
 
-```{r exploratory_reactions, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
-response_levels = c("A great deal", "A lot", "A moderate amount", "A little", "None at all")
-
-results_response = results_clean %>%
-  select(panel, arm
+```{r exploratory_reactions, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
+results_response = results_clean_lim %>%
+  select(ideology_bin, arm
          , purity_q1_self, purity_q2_repulsed, purity_q3_injustice, purity_q4_relieved
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved) %>%
-  gather(prompt, value, -panel, -arm) %>%
-  filter(!is.na(value)) %>%
-  group_by(panel, arm, prompt, value) %>% summarise(count = n()) %>%
-  mutate(response = factor(value, levels = response_levels))
-
-ggplot(data = results_response
-       , aes(x = prompt, y = response, fill = count)) +
-  geom_tile() +
-  facet_grid(rows = vars(arm), cols = vars(panel)) +
-  scale_fill_distiller(direction = 1) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-```{r exploratory_reactions_bin, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions (Bin)"}
-results_response_bin = results_clean %>%
-  select(ideology_bin, arm
-         , purity_q2_repulsed_bin, purity_q4_relieved_bin
-         , fairness_q2_pain_bin, fairness_q4_relieved_bin) %>%
   gather(prompt, value, -ideology_bin, -arm) %>%
   filter(!is.na(value)) %>%
-  group_by(ideology_bin, arm, prompt) %>% mutate(total_value = sum(value)) %>%
-  group_by(ideology_bin, arm, prompt, value) %>% summarise(share = sum(value)/max(total_value))
+  group_by(ideology_bin, arm, prompt, value) %>%
+  summarise(count = n()) %>%
+  mutate(response = factor(value, levels = response_levels)) %>%
+  group_by(ideology_bin, arm, prompt) %>%
+  mutate(count_total_cohort = sum(count)
+         , count_share = count/count_total_cohort)
 
-ggplot(data = results_response_bin
-       , aes(x = prompt, y = value, fill = share)) +
+ggplot(data = results_response
+       , aes(x = prompt, y = response, fill = count_share)) +
   geom_tile() +
   facet_grid(rows = vars(arm), cols = vars(ideology_bin)) +
   scale_fill_distiller(direction = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# One for Libs/Cons
 ```
 
 ### Outcome  
 
-```{r exploratory_outcome, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Outcomes"}
+```{r exploratory_outcome, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Outcomes"}
 # Histogram of familiarity
-plot_familiarity = ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology, panel) %>% summarise(count = n())
+plot_familiarity = ggplot(data = results_clean_lim %>% group_by(ubi_familiarity, ideology, ideology_bin) %>% summarise(count = n()) %>%
+                            filter(!is.na(ubi_familiarity))
        , aes(x = ubi_familiarity, y = count, fill = ideology)) +
   geom_bar(stat="identity", show.legend = FALSE) +
-  facet_grid( ~ panel) +
+  facet_grid( ~ ideology_bin) +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Heat map of number UBI like
-plot_ubi = ggplot(data = results_clean %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number))
-       , aes(x = ideology, y = ubi_familiarity, fill = ubi_number_avg)) +
+plot_ubi = ggplot(data = results_clean_lim %>% group_by(ubi_familiarity, ideology) %>% summarise(ubi_number_avg = mean(ubi_number)) %>%
+                    filter(!is.na(ubi_familiarity))
+       , aes(x = ubi_familiarity, y = ideology, fill = ubi_number_avg)) +
   geom_tile() +
   scale_fill_distiller(direction = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)
@@ -361,8 +381,6 @@ grid.arrange(plot_familiarity, plot_ubi
 \pagebreak
 
 # Methodology  
-
-## Model 1  
 
 **Independent variable**  
 
@@ -396,67 +414,161 @@ my_lm_calcs = function(lm_in, clusters_in){
 }
 ```
 
+```{r model_arm_recruitday, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1}Model 1 - Factorial Design, by Arm and Recruitment Day", results='asis'}
+model0_day = my_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_day, data = results_clean_lim_ctrl), clusters_in = NA)
 
-```{r methodology_model_1_explore, fig.height = 3, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_1_explore}Model 1 - Exploratory Plot", results='asis'}
-model1_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
-model1_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
-model1_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair) , clusters_in = NA)
-model1_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpur), clusters_in = NA)
+model1_libfair_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armlibfair), clusters_in = NA)
+model1_libpure_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armlibpure), clusters_in = NA)
+model1_confair_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armconfair), clusters_in = NA)
+model1_conpure_day = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_day, data = results_armconpure), clusters_in = NA)
 
-stargazer(model1_libfair$lm, model1_libpure$lm
-          , model1_confair$lm, model1_conpure$lm
+stargazer(model0_day$lm
+          , model1_libfair_day$lm, model1_libpure_day$lm
+          , model1_confair_day$lm, model1_conpure_day$lm
           , type = stargazer_type, header = F
-          , se = list(model1_libfair$se_robust, model1_libpure$se_robust
-                      , model1_confair$se_robust, model1_conpure$se_robust)
-          , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Lib + Fair", "Lib + Purity"
-                              , "Con + Fair", "Con + Purity")
+          , se = list(model0_day$se_robust
+                      , model1_libfair_day$se_robust, model1_libpure_day$se_robust
+                      , model1_confair_day$se_robust, model1_conpure_day$se_robust)
+          , title            = "Moral Foundations Regression Specifications"
+          , column.labels    = c("Control Only", "Lib + Fair", "Lib + Pure"
+                                 , "Con + Fair", "Con + Pure")
+          , order = c(1,4,5,2,3,6,7)
+          , covariate.labels = c("Liberal", "Base Treatment", "Extension Treatment"
+                                 ,"Friday", "Sunday", "Monday", "Tuesday2")
+          , dep.var.caption  = "Four Study Arms + Control"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          , report           = ('v*c*sp')
+)
+```
+NOTES:  
+- Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level  
+- Day of recuitment not significant across any arms  
+- Therefore, no need to stratify (see below for example of stratification specification)  
+
+```{r model_recruitday_stratify, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_2}Model 2 - Example Specification Stratified by Recruitment Day", results='asis'}
+# Using the survey design package and stratifying by recruitment day to verify importance of day of recruitment
+results_armconpure_strat = svydesign(id=~1, strata=~recruitment_day, data = results_armconpure)
+model2_sratday = svyglm(ubi_number ~ arm_level, design = results_armconpure_strat)
+
+stargazer(model2_sratday
+          , type = stargazer_type, header = F
+          # , se = list() ???
+          , title = "Moral Foundations Regression Specifications"
+          , column.labels = c("Con + Pure")
+          , covariate.labels = c("Base", "Extension")
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          )
+```
+NOTES:
+- 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter?
+- 
+
+```{r model_arm_prelim, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_3_prelim}Model 3 (Prelim) - Factorial Design, by Arm", results='asis'}
+model3_libfair_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armlibfair %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+model3_libpure_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armlibpure %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+model3_confair_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armconfair %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+model3_conpure_prelim = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level
+                                               , data = results_armconpure %>% filter(recruitment_day %in% c("Tuesday1", "Friday"))), clusters_in = NA)
+
+stargazer(model3_libfair_prelim$lm, model3_libpure_prelim$lm
+          , model3_confair_prelim$lm, model3_conpure_prelim$lm
+          , type = stargazer_type, header = F
+          , se = list(model3_libfair_prelim$se_robust, model3_libpure_prelim$se_robust
+                      , model3_confair_prelim$se_robust, model3_conpure_prelim$se_robust)
+          , title = "Moral Foundations Regression Specifications"
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
 ```
 
 
+```{r model_arm, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_3}Model 3 - Factorial Design, by Arm", results='asis'}
+model3_libfair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
+model3_libpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
+model3_confair = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
+model3_conpure = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure),  clusters_in = NA)
 
-```{r methodology_model_1_gender, results='asis'}
-
-model1_libfair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibfair), clusters_in = NA)
-model1_libpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armlibpure), clusters_in = NA)
-model1_confair_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armconfair) , clusters_in = NA)
-model1_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level*gender, data = results_armconpur), clusters_in = NA)
-
-stargazer(model1_libfair_gender$lm, model1_libpure_gender$lm
-          , model1_confair_gender$lm, model1_conpure_gender$lm
+stargazer(model3_libfair$lm, model3_libpure$lm
+          , model3_confair$lm, model3_conpure$lm
           , type = stargazer_type, header = F
-          , se = list(model1_libfair_gender$se_robust, model1_libpure_gender$se_robust
-                      , model1_confair_gender$se_robust, model1_conpure_gender$se_robust)
+          , se = list(model3_libfair$se_robust, model3_libpure$se_robust
+                      , model3_confair$se_robust, model3_conpure$se_robust)
+          , title = "Moral Foundations Regression Specifications"
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+)
+```
+NOTES:  
+- Still not sure if using the balanced is necessary if we're saying that day of the week is not significant  
+- We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.  
+
+```{r model_conpure_interactions, echo = FALSE, fig.height = 4, fig.width = 4, fig.align="center", fig.cap="\\label{fig:model_4}Models 4-7 - Con + Pure Interaction Specifications", results='asis'}
+
+# Gender
+model4_conpure_gender = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender
+                                               , data = results_armconpure), clusters_in = NA)
+# Familiarity
+model5_conpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level + ubi_familiarity_bin
+                                                    , data = results_armconpure), clusters_in = NA)
+# Reaction
+model6_conpure_reaction_bas = my_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin 
+                                                     , data = results_armconpure %>% filter(arm_level != "extension")), clusters_in = NA)
+model7_conpure_reaction_ext = my_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin + purity_q4_relieved_bin
+                                                      , data = results_armconpure %>% filter(arm_level != "base")), clusters_in = NA)
+
+stargazer(model3_conpure$lm
+          , model4_conpure_gender$lm
+          , model5_conpure_familiarity$lm
+          , model6_conpure_reaction_bas$lm
+          , model7_conpure_reaction_ext$lm
+          , type = stargazer_type, header = F
+          , se = list(model3_conpure$se_robust
+                      , model4_conpure_gender$se_robust
+                      , model5_conpure_familiarity$se_robust
+                      , model6_conpure_reaction_bas$se_robust
+                      , model7_conpure_reaction_ext$se_robust
+          )
           , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Lib + Fair", "Lib + Purity"
-                              , "Con + Fair", "Con + Purity")
+          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction (Base)", "Reaction (Extension)")
+          , covariate.labels = c("Base Treatment", "Extension Treatment"
+                                 , "Male", "Familiar w/ UBI"
+                                 , "Repulsed", "Relieved")
+          , dep.var.caption  = "Con + Pure Arm Only"
+          , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
 )
 ```
 
-```{r methodology_model_1_familiarity, results='asis'}
+NOTES:  
+Gender  
+- Gender gap still interesting - a significant baselne difference between genders   
 
-model1_libfair_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armlibfair), clusters_in = NA)
-model1_libpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armlibpure), clusters_in = NA)
-model1_confair_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armconfair) , clusters_in = NA)
-model1_conpure_familiarity = my_lm_calcs(lm_in = lm(ubi_number ~ arm_level+ubi_familiarity_bin, data = results_armconpur), clusters_in = NA)
+Familiarity  
+- Being familiar with UBI makes conservatives lower at baseline  
+- Really just noise based on no change in treatment effect  
+below notes from previous factorial setup  
+- Interation of familiarity and purity is actually fascintating directionally-speaking   
+  - Liberals higher at baseline if familiar BUT the treatment actually lowered their scores while those unfamiliar moved up when treated  
+  - The absolute opposite happens for conservatives: if you're familiar you start lower and then treatment nudges you higher but those unfamiliar move down  
 
-stargazer(model1_libfair_familiarity$lm, model1_libpure_familiarity$lm
-          , model1_confair_familiarity$lm, model1_conpure_familiarity$lm
-          , type = stargazer_type, header = F
-          , se = list(model1_libfair_familiarity$se_robust, model1_libpure_familiarity$se_robust
-                      , model1_confair_familiarity$se_robust, model1_conpure_familiarity$se_robust)
-          , title = "Moral Foundations Prelim Regression Specifications"
-          , column.labels = c("Lib + Fair", "Lib + Purity"
-                              , "Con + Fair", "Con + Purity")
-          , notes = "HC Robust Standard Errors"
-          , report = ('v*c*sp')
-)
-```
+Reaction  
+- Running out of N and no interaction with other arm - hard to read
 
 _[[Example Table]]_  
 
@@ -496,9 +608,9 @@ _[[TBD]]_
 
 ## Data Dictionary
 
-| Variable Name | Variable | Values | Source | Notes |
-| :---- | :-------- | :-------- | :---------- | :----- |
-| prolific_pid |||||
+| Variable Name | Variable | Values | Notes |
+| :---- | :-------- | :-------- | :----- |
+| prolific_pid | User ID | 10-digit numeric ||
 | panel |||||
 | arm |||||
 | node |||||
