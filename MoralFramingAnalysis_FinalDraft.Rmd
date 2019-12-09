@@ -32,7 +32,7 @@ packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "latex" #"latex" # change to latex when ready to knit
+stargazer_type = "text" #"latex" # change to latex when ready to knit
 ```
 
 ```{r import, include = FALSE}
@@ -542,15 +542,27 @@ stargazer(model2_libfair$lm, model2_libpure$lm
 
 # Gender
 model3_conpure_gender = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender
-                                               , data = results_armconpure), clusters_in = NA)
+                                               , data = results_armconpure)
+                                        , clusters_in = NA)
 # Familiarity
 model3_conpure_familiarity = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + ubi_familiarity_bin
-                                                    , data = results_armconpure), clusters_in = NA)
+                                                    , data = results_armconpure)
+                                             , clusters_in = NA)
+
+results_armconpure_reaction = results_armconpure %>%
+  mutate(purity_q2_repulsed_bin_f = case_when(is.na(purity_q2_repulsed_bin) ~ 0
+                                              , TRUE ~ as.numeric(purity_q2_repulsed_bin) + 1) %>% factor()
+         , purity_q4_relieved_bin_f = case_when(is.na(purity_q4_relieved_bin) ~ 0
+                                                , TRUE ~ as.numeric(purity_q4_relieved_bin) + 1) %>% factor()
+         )
+
 # Reaction
-model3_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin 
-                                                     , data = results_armconpure %>% filter(arm_level != "extension")), clusters_in = NA)
-model3_conpure_reaction_ext = custom_lm_calcs(lm_in = lm(ubi_number ~ purity_q2_repulsed_bin + purity_q4_relieved_bin
-                                                      , data = results_armconpure %>% filter(arm_level != "base")), clusters_in = NA)
+model3_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f 
+                                                     , data = results_armconpure_reaction %>% filter(arm_level != "Extension"))
+                                              , clusters_in = NA)
+model3_conpure_reaction_ext = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
+                                                      , data = results_armconpure_reaction %>% filter(arm_level != "Base"))
+                                              , clusters_in = NA)
 
 stargazer(model2_conpure$lm
           , model3_conpure_gender$lm
@@ -566,9 +578,9 @@ stargazer(model2_conpure$lm
           )
           , title = "Conservative + Purity Treatment Arm Interaction Specifications"
           , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction (Base)", "Reaction (Extension)")
-          , covariate.labels = c("Base Treatment", "Extension Treatment"
-                                 , "Male", "Familiar w/ UBI"
-                                 , "Repulsed", "Relieved")
+          # , covariate.labels = c("Base Treatment", "Extension Treatment"
+          #                        , "Male", "Familiar w/ UBI"
+          #                        , "Repulsed", "Relieved")
           , dep.var.caption  = "Con + Pure Arm Only"
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
