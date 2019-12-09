@@ -549,14 +549,14 @@ model3_conpure_familiarity = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level +
                                                     , data = results_armconpure)
                                              , clusters_in = NA)
 
+# Reaction
 results_armconpure_reaction = results_armconpure %>%
   mutate(purity_q2_repulsed_bin_f = case_when(is.na(purity_q2_repulsed_bin) ~ 0
-                                              , TRUE ~ as.numeric(purity_q2_repulsed_bin) + 1) %>% factor()
+                                              , TRUE ~ as.numeric(as.character(purity_q2_repulsed_bin))) %>% factor()
          , purity_q4_relieved_bin_f = case_when(is.na(purity_q4_relieved_bin) ~ 0
-                                                , TRUE ~ as.numeric(purity_q4_relieved_bin) + 1) %>% factor()
+                                                , TRUE ~ as.numeric(as.character(purity_q4_relieved_bin))) %>% factor()
          )
-
-# Reaction
+# NOTE - could we keep both arms in a single regression? what would that tell us? (see next cell)
 model3_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f 
                                                      , data = results_armconpure_reaction %>% filter(arm_level != "Extension"))
                                               , clusters_in = NA)
@@ -578,9 +578,9 @@ stargazer(model2_conpure$lm
           )
           , title = "Conservative + Purity Treatment Arm Interaction Specifications"
           , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction (Base)", "Reaction (Extension)")
-          # , covariate.labels = c("Base Treatment", "Extension Treatment"
-          #                        , "Male", "Familiar w/ UBI"
-          #                        , "Repulsed", "Relieved")
+          , covariate.labels = c("Base Treatment", "Extension Treatment"
+                                 , "Male", "Familiar w/ UBI"
+                                 , "Repulsed", "Relieved")
           , dep.var.caption  = "Con + Pure Arm Only"
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
@@ -603,6 +603,26 @@ stargazer(model2_conpure$lm
 <!-- Reaction   -->
 <!-- - Running out of N and no interaction with other arm - hard to read -->
 
+```{r model_reactions_combine, echo = FALSE, results = 'asis'}
+model3_conpure_reaction_com = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
+                                                     , data = results_armconpure_reaction)
+                                              , clusters_in = NA)
+stargazer(model3_conpure_reaction_com$lm
+          , type = stargazer_type, header = F
+          , se = list(model3_conpure_reaction_com$se_robust)
+          , title = "Conservative + Purity Treatment Arm Reaction Interaction (Combine)"
+          , column.labels = c("Reaction (Both Arms)")
+          , covariate.labels = c("Base Treatment", "Extension Treatment"
+                                 , "Repulsed", "Relieved")
+          , dep.var.caption  = "Con + Pure Arm Only"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:model3"
+          )
+```
 
 \newpage
 
