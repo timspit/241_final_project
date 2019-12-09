@@ -590,15 +590,15 @@ stargazer(model2_conpure$lm
           , label            = "tab:model3"
 )
 ```
-<!-- NOTES:   -->
-<!-- Gender -->
-<!-- - Gender gap still interesting - a significant baselne difference between genders at baseline -->
-<!-- Familiarity -->
-<!-- - Being familiar with UBI makes conservatives lower at baseline -->
-<!-- - Really just noise based on no change in treatment effect -->
-<!-- Reactions -->
-<!-- - Being in base drives people slightly lower if repulsed, but mostly just noise -->
-<!-- - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact   -->
+NOTES:
+Gender
+- Gender gap still interesting - a significant baselne difference between genders at baseline
+Familiarity
+- Being familiar with UBI makes conservatives lower at baseline
+- Really just noise based on no change in treatment effect
+Reactions
+- Being in base drives people slightly lower if repulsed, but mostly just noise
+- Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact
 
 ```{r model_reactions_combine, echo = FALSE, results = 'asis'}
 model3_conpure_reaction_com = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
@@ -622,7 +622,10 @@ stargazer(model3_conpure_reaction_com$lm
 ```
 
 ```{r model_ALL_fuckit, echo = FALSE, results = 'asis'}
-model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + ubi_familiarity_bin + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
+# model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + ubi_familiarity_bin + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
+#                                                 , data = results_armconpure_reaction)
+#                                      , clusters_in = NA)
+model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
                                                 , data = results_armconpure_reaction)
                                      , clusters_in = NA)
 stargazer(model3_conpure_ALL$lm
@@ -640,7 +643,13 @@ stargazer(model3_conpure_ALL$lm
           , column.sep.width = "1pt"
           , label            = "tab:model3ALL"
           )
+
+# results_armconpure_reaction %>% group_by(arm_level, gender, purity_q2_repulsed_bin_f, purity_q4_relieved_bin_f) %>% 
+#   summarise(mean_ubi = mean(ubi_number)
+#             , n = n())
 ```
+NOTES:
+There are some interesting ways to specificy this to see if treatment garnered the intended response and how they effected genders differently, but small n may be distorting how usable those specifications are  
 
 \newpage
 
