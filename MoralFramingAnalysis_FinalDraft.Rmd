@@ -591,17 +591,14 @@ stargazer(model2_conpure$lm
 )
 ```
 <!-- NOTES:   -->
-<!-- Gender   -->
-<!-- - Gender gap still interesting - a significant baselne difference between genders    -->
-<!-- Familiarity   -->
-<!-- - Being familiar with UBI makes conservatives lower at baseline   -->
-<!-- - Really just noise based on no change in treatment effect   -->
-<!-- below notes from previous factorial setup   -->
-<!-- - Interation of familiarity and purity is actually fascintating directionally-speaking    -->
-<!--   - Liberals higher at baseline if familiar BUT the treatment actually lowered their scores while those unfamiliar moved up when treated   -->
-<!--   - The absolute opposite happens for conservatives: if you're familiar you start lower and then treatment nudges you higher but those unfamiliar move down   -->
-<!-- Reaction   -->
-<!-- - Running out of N and no interaction with other arm - hard to read -->
+<!-- Gender -->
+<!-- - Gender gap still interesting - a significant baselne difference between genders at baseline -->
+<!-- Familiarity -->
+<!-- - Being familiar with UBI makes conservatives lower at baseline -->
+<!-- - Really just noise based on no change in treatment effect -->
+<!-- Reactions -->
+<!-- - Being in base drives people slightly lower if repulsed, but mostly just noise -->
+<!-- - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact   -->
 
 ```{r model_reactions_combine, echo = FALSE, results = 'asis'}
 model3_conpure_reaction_com = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
@@ -620,7 +617,28 @@ stargazer(model3_conpure_reaction_com$lm
           , report = ('v*c*sp')
           , font.size        = "small"
           , column.sep.width = "1pt"
-          , label            = "tab:model3"
+          , label            = "tab:model3reactcombine"
+          )
+```
+
+```{r model_ALL_fuckit, echo = FALSE, results = 'asis'}
+model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + ubi_familiarity_bin + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
+                                                , data = results_armconpure_reaction)
+                                     , clusters_in = NA)
+stargazer(model3_conpure_ALL$lm
+          , type = stargazer_type, header = F
+          , se = list(model3_conpure_ALL$se_robust)
+          , title = "Conservative + Purity Treatment Arm ALL Interactions"
+          # , column.labels = c("Reaction (Both Arms)")
+          # , covariate.labels = c("Base Treatment", "Extension Treatment"
+          #                        , "Repulsed", "Relieved")
+          , dep.var.caption  = "Con + Pure Arm Only"
+          , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:model3ALL"
           )
 ```
 
