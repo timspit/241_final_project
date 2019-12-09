@@ -592,12 +592,12 @@ stargazer(model2_conpure$lm
 ```
 NOTES:
 Gender
-- Gender gap still interesting - a significant baselne difference between genders at baseline
+- Gender gap still interesting - a significant baseline difference between genders 
 Familiarity
 - Being familiar with UBI makes conservatives lower at baseline
 - Really just noise based on no change in treatment effect
 Reactions
-- Being in base drives people slightly lower if repulsed, but mostly just noise
+- Being in Base drives people slightly lower if repulsed, but mostly just noise
 - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact
 
 ```{r model_reactions_combine, echo = FALSE, results = 'asis'}
@@ -622,12 +622,12 @@ stargazer(model3_conpure_reaction_com$lm
 ```
 
 ```{r model_ALL_fuckit, echo = FALSE, results = 'asis'}
-# model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + ubi_familiarity_bin + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
-#                                                 , data = results_armconpure_reaction)
-#                                      , clusters_in = NA)
-model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
+model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + ubi_familiarity_bin + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
                                                 , data = results_armconpure_reaction)
                                      , clusters_in = NA)
+# model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ gender * purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
+#                                                 , data = results_armconpure_reaction)
+#                                      , clusters_in = NA)
 stargazer(model3_conpure_ALL$lm
           , type = stargazer_type, header = F
           , se = list(model3_conpure_ALL$se_robust)
