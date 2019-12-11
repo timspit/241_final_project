@@ -33,7 +33,7 @@ packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "latex" #"latex" # change to latex when ready to knit
+stargazer_type = "text" #"latex" # change to latex when ready to knit
 ```
 
 ```{r import, include = FALSE}
@@ -434,200 +434,41 @@ grid.arrange(plot_familiarity, plot_ubi
 
 ## Models  
 
-### _Preliminary results with partial data informed our focus on Con + Pure (see \autoref{tab:prelimmodel})_  
+_Preliminary results with partial data informed our focus on Con + Pure (see \autoref{tab:prelimmodel})_  
 
-```{r model_arm_prelim, echo = FALSE, results='asis'}
-prelim_model_libfair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair %>% 
-                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
-                                              , clusters_in = NA)
-prelim_model_libpure_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure %>% 
-                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
-                                              , clusters_in = NA)
-prelim_model_confair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair %>% 
-                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
-                                              , clusters_in = NA)
-prelim_model_conpure_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure %>% 
-                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
-                                              , clusters_in = NA)
+_Given that we collected in waves, wanted to ensure the wave/day blocking did not introduce an effect on our results (see \autoref{tab:wavestratmodel})_  
 
-stargazer(prelim_model_libfair_prelim$lm, prelim_model_libpure_prelim$lm
-          , prelim_model_confair_prelim$lm, prelim_model_conpure_prelim$lm
-          , type = stargazer_type, header = F
-          , se = list(prelim_model_libfair_prelim$se_robust, prelim_model_libpure_prelim$se_robust
-                      , prelim_model_confair_prelim$se_robust, prelim_model_conpure_prelim$se_robust)
-          , title = "Preliminary Model - By Arm (Waves 1-2 only)"
-          , column.labels = c("Lib + Fair", "Lib + Pure"
-                              , "Con + Fair", "Con + Pure")
-          , covariate.labels = c("Base Treatment", "Extension Treatment")
-          , dep.var.caption  = "Four Study Arms"
-          , dep.var.labels   = "UBI Ranking"
-          , notes = "HC Robust Standard Errors"
-          , report = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:prelimmodel"
-)
-```
+_Our design was not factorial (see \autoref{tab:factorialmodel}), which should preobably be deleted_  
 
-\newpage
+_We still collected more data for all arms to confirm that of design, Con + Pure was most impactful (see \autoref{tab:allarmsmodel})_  
 
-### _Given that we collected in waves, wanted to ensure the wave/day blocking did not introduce an effect on our results (see \autoref{tab:model1})_  
+```{r model_all_arms, echo = FALSE, results='asis'}
+model_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
+model_libpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
+model_confair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
+model_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure), clusters_in = NA)
 
-```{r model_arm_recruitday, echo = FALSE, results='asis'}
-model0_day = custom_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_wave, data = results_clean_lim_ctrl), clusters_in = NA)
-
-model1_libfair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibfair), clusters_in = NA)
-model1_libpure_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibpure), clusters_in = NA)
-model1_confair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armconfair), clusters_in = NA)
-model1_conpure_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armconpure), clusters_in = NA)
-
-stargazer(model0_day$lm
-          , model1_libfair_day$lm, model1_libpure_day$lm
-          , model1_confair_day$lm, model1_conpure_day$lm
-          , type = stargazer_type, header = F
-          , se = list(model0_day$se_robust
-                      , model1_libfair_day$se_robust, model1_libpure_day$se_robust
-                      , model1_confair_day$se_robust, model1_conpure_day$se_robust
-                      )
-          , title            = "By Arm, Recruitment Day Covariates"
-          , column.labels    = c("Control Only"
-                                 , "Lib + Fair", "Lib + Pure"
-                                 , "Con + Fair", "Con + Pure")
-          , order = c(1,4,5,2,3,6,7)
-          , covariate.labels = c("Liberal", "Base Treatment", "Extension Treatment"
-                                 ,"Wave 2", "Wave 3", "Wave 4", "Wave 5")
-          , dep.var.caption  = "Four Study Arms + Control"
-          , dep.var.labels   = "UBI Ranking"
-          , notes            = "HC Robust Standard Errors"
-          , report           = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:model1"
-)
-```
-<!-- NOTES:   -->
-<!-- - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level   -->
-<!-- - Day of recuitment/wave not significant across any arms   -->
-<!-- - Therefore, no need to stratify -->
-
-
-\newpage
-
-### _We still collected more data for all arms to confirm that of design, Con + Pure was most impactful (see \autoref{tab:model2})_  
-
-```{r model_arm, echo = FALSE, results='asis'}
-model2_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
-model2_libpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
-model2_confair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
-model2_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure), clusters_in = NA)
-
-stargazer(model2_libfair$lm, model2_libpure$lm
-          , model2_confair$lm, model2_conpure$lm
-          , se = list(model2_libfair$se_robust, model2_libpure$se_robust
-                      , model2_confair$se_robust, model2_conpure$se_robust)
+stargazer(model_libfair$lm, model_libpure$lm
+          , model_confair$lm, model_conpure$lm
+          , se = list(model_libfair$se_robust, model_libpure$se_robust
+                      , model_confair$se_robust, model_conpure$se_robust)
           , type = stargazer_type, header = F
           , title = "By Arm"
           , column.labels = c("Lib + Fair", "Lib + Pure"
                               , "Con + Fair", "Con + Pure")
-          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment")
           , dep.var.caption  = "Four Study Arms"
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
           , font.size        = "small"
           , column.sep.width = "1pt"
-          , label            = "tab:model2"
+          , label            = "tab:allarmsmodel"
 )
 ```
 <!-- NOTES:   -->
 <!-- - Still not sure if using the balanced is necessary if we're saying that day of the week is not significant   -->
 <!-- - We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.   -->
-
-### FACTORIAL SHIT
-
-```{r factorial_sandbox}
-results_clean_factorial = results_clean_lim %>%
-  mutate(liberal = case_when(ideology_bin == "Liberal" ~ 1
-                               , TRUE ~ 0)
-         , conservative = case_when(ideology_bin == "Conservative" ~ 1
-                                    , TRUE ~ 0)
-         , fairness = case_when(arm_story == "Fairness" ~ 1
-                                , TRUE ~ 0)
-         , purity = case_when(arm_story == "Purity" ~ 1
-                              , TRUE ~ 0)
-         # base_com - if we consider it it's own treatment
-         , base_com = case_when(arm_level == "Base" ~ 1
-                          , TRUE ~ 0)
-         # base_ind - if we consider it indepdent and therefore administered WITH Extension
-         , base_ind = case_when(arm_level == "Base" ~ 1
-                          , arm_level == "Extension" ~ 1
-                          , TRUE ~ 0)
-         , extension = case_when(arm_level == "Extension" ~ 1
-                                 , TRUE ~ 0)
-  )
-
-# Arm-specific datasets
-results_factorial_lib = results_clean_factorial %>% filter(ideology_bin == 'Liberal')
-results_factorial_con = results_clean_factorial %>% filter(ideology_bin == 'Conservative')
-
-results_factorial_fair = results_clean_factorial %>% filter(grepl('Fairness|Control', arm))
-results_factorial_pure = results_clean_factorial %>% filter(grepl('Purity|Control', arm))
-
-results_factorial_libfair = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
-results_factorial_libpure = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Purity|Control', arm))
-results_factorial_confair = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Fairness|Control', arm))
-results_factorial_conpure = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Purity|Control', arm))
-
-cross_tab_factorial = results_clean_factorial %>%
-  group_by(liberal, conservative, purity, fairness, base_com, base_ind, extension) %>%
-  summarise(n = n())
-
-# REGRESSION
-factorial_levels_com = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * purity * fairness * extension
-                                                  , data = results_clean_factorial)
-                                       , clusters_in = NA)
-
-stargazer(factorial_levels_com$lm
-          , se = list(factorial_levels_com$se_robust
-          )
-          , type = stargazer_type, header = F
-          , title            = "All Arms Factorial Specifications"
-          , column.labels    = c("Levels Independent")
-          , dep.var.caption  = "All Arms"
-          , dep.var.labels   = "UBI Ranking"
-          , notes            = "HC Robust Standard Errors"
-          # , report           = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:modelfactorial"
-          , single.row       = TRUE)
-```
-
-```{r our_spec_long}
-
-### LEFT OFF HERE ### - just think we need to isolate the stories???
-our_spec_long_con = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * arm_story * arm_level
-                                               , data = results_factorial_pure)
-                                    , clusters_in = NA)
-
-stargazer(our_spec_long_con$lm
-          # , factorial_levels_ind$lm
-          # , se = list(our_spec_long_con$se_robust
-                      # , factorial_levels_ind$se_robust
-          # )
-          , type = stargazer_type, header = F
-          , title            = "All Arms Factorial Specifications"
-          , column.labels    = c("Levels Independent")
-          , dep.var.caption  = "All Arms"
-          , dep.var.labels   = "UBI Ranking"
-          , notes            = "HC Robust Standard Errors"
-          # , report           = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:modelfactorial"
-          , single.row       = TRUE)
-
-```
 
 \newpage
 
@@ -673,7 +514,7 @@ stargazer(model2_conpure$lm
           )
           , title = "Conservative + Purity Treatment Arm Interaction Specifications"
           , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction") #" (Base)", "Reaction (Extension)")
-          , covariate.labels = c("Base Treatment", "Extension Treatment"
+          , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment"
                                  , "Male", "Familiar w/ UBI"
                                  , "Repulsed", "Relieved", "Repulsed then Relieved")
           , dep.var.caption  = "Con + Pure Arm Only"
@@ -685,26 +526,15 @@ stargazer(model2_conpure$lm
           , label            = "tab:model3"
 )
 ```
-NOTES:
-Gender
-- Gender gap still interesting - a significant baseline difference between genders 
-Familiarity
-- Being familiar with UBI makes conservatives lower at baseline
-- Really just noise based on no change in treatment effect
-Reactions
-- Being in Base drives people slightly lower if repulsed, but mostly just noise
-- Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact
-
-```{r}
-stargazer(lm(arm_level ~ gender + age + urban + ideology, data = results_armlibfair)
-          , lm(arm_level ~ gender + age + urban + ideology, data = results_armlibpure)
-          , lm(arm_level ~ gender + age + urban + ideology, data = results_armconfair)
-          , lm(arm_level ~ gender + age + urban + ideology, data = results_armconpure)
-          , column.labels = c("Lib + Fair", "Lib + Pure"
-                              , "Con + Fair", "Con + Pure")
-          , report = ('v*c*sp')
-          , type = "text")
-```
+<!-- NOTES: -->
+<!-- Gender -->
+<!-- - Gender gap still interesting - a significant baseline difference between genders  -->
+<!-- Familiarity -->
+<!-- - Being familiar with UBI makes conservatives lower at baseline -->
+<!-- - Really just noise based on no change in treatment effect -->
+<!-- Reactions -->
+<!-- - Being in Base drives people slightly lower if repulsed, but mostly just noise -->
+<!-- - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact -->
 
 \newpage
 
@@ -777,54 +607,135 @@ grid.raster(flowchart_img)
 
 _[[TBD]]_  
 
-## Legacy Code (to be cut before final)  
+## Additional Regression Tables  
 
-<!-- Balanced data (for if we needed to stratify by recruitment day) -->
+```{r model_arm_prelim, echo = FALSE, results='asis'}
+prelim_model_libfair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+prelim_model_libpure_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+prelim_model_confair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
+prelim_model_conpure_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure %>% 
+                                                           filter(recruitment_wave %in% c("Wave1", "Wave2")))
+                                              , clusters_in = NA)
 
-```{r balance_data, include = FALSE}
-# Remove observations that don't give us apples to apples comparisons (e.g. data in the control group from different periods)
-
-# Conservative + Purity = ALL except Friday
-results_armconpure_balance = results_armconpure[results_armconpure$recruitment_wave!='Friday',]
-# Conservative + Fairness = Tuesday1
-results_armconfair_balance = results_armconfair[results_armconfair$recruitment_wave=='Tuesday1',]
-# Liberal + Purity = Tuesday1 + Tuesday2
-results_armlibpure_balance = results_armlibpure[results_armlibpure$recruitment_wave %in% c('Tuesday1', 'Tuesday2'),]
-# Liberal + Fairness = Tuesday1 + Tuesday2
-results_armlibfair_balance = results_armlibfair[results_armlibfair$recruitment_wave %in% c('Tuesday1', 'Tuesday2'),]
-```
-
-<!-- Arm balance by wave  -->
-
-```{r balance_arm_recruitday, include = FALSE}
-balance_arm_recuit = results_clean_lim %>% group_by(recruitment_wave, ideology_bin, arm) %>%
-  summarise(observations = n()) %>%
-  pivot_wider(names_from = recruitment_wave, values_from = observations) %>%
-  arrange(ideology_bin, arm) %>%
-  rename("Ideology" = ideology_bin, "Arm" = arm)
-kable(balance_arm_recuit)
-```
-
-<!-- Stratified regression code -->
-
-```{r model_recruitday_stratify, echo = FALSE, results='asis'}
-# Using the survey design package and stratifying by recruitment day to verify importance of day of recruitment
-results_armconpure_strat = svydesign(id=~1, strata=~recruitment_wave, data = results_armconpure)
-model2_sratday = svyglm(ubi_number ~ arm_level, design = results_armconpure_strat)
-
-stargazer(model2_sratday
+stargazer(prelim_model_libfair_prelim$lm, prelim_model_libpure_prelim$lm
+          , prelim_model_confair_prelim$lm, prelim_model_conpure_prelim$lm
           , type = stargazer_type, header = F
-          # , se = list() ???
-          , title = "Model 2 - Example Specification Stratified by Recruitment Day"
-          , column.labels = c("Con + Pure")
-          , covariate.labels = c("Base", "Extension")
+          , se = list(prelim_model_libfair_prelim$se_robust, prelim_model_libpure_prelim$se_robust
+                      , prelim_model_confair_prelim$se_robust, prelim_model_conpure_prelim$se_robust)
+          , title = "Preliminary Model - By Arm (Waves 1-2 only)"
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
           , report = ('v*c*sp')
-          )
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:prelimmodel"
+)
 ```
-<!-- NOTES: -->
-<!-- - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter -->
 
+```{r model_arm_recruitday, echo = FALSE, results='asis'}
+model_control_day = custom_lm_calcs(lm_in = lm(ubi_number ~ ideology_bin + recruitment_wave, data = results_clean_lim_ctrl), clusters_in = NA)
+
+model_libfair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibfair), clusters_in = NA)
+model_libpure_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armlibpure), clusters_in = NA)
+model_confair_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armconfair), clusters_in = NA)
+model_conpure_day = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + recruitment_wave, data = results_armconpure), clusters_in = NA)
+
+stargazer(model_control_day$lm
+          , model_libfair_day$lm, model_libpure_day$lm
+          , model_confair_day$lm, model_conpure_day$lm
+          , type = stargazer_type, header = F
+          , se = list(model_control_day$se_robust
+                      , model_libfair_day$se_robust, model_libpure_day$se_robust
+                      , model_confair_day$se_robust, model_conpure_day$se_robust
+                      )
+          , title            = "By Arm, Recruitment Day Covariates"
+          , column.labels    = c("Control Only"
+                                 , "Lib + Fair", "Lib + Pure"
+                                 , "Con + Fair", "Con + Pure")
+          , order = c(1,4,5,2,3,6,7)
+          , covariate.labels = c("Liberal", "Base Treatment", "Extension Treatment"
+                                 ,"Wave 2", "Wave 3", "Wave 4", "Wave 5")
+          , dep.var.caption  = "Four Study Arms + Control"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:wavestratmodel"
+)
+```
+<!-- NOTES:   -->
+<!-- - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level   -->
+<!-- - Day of recuitment/wave not significant across any arms   -->
+<!-- - Therefore, no need to stratify -->
+
+```{r factorial_sandbox}
+results_clean_factorial = results_clean_lim %>%
+  mutate(liberal = case_when(ideology_bin == "Liberal" ~ 1
+                               , TRUE ~ 0)
+         , conservative = case_when(ideology_bin == "Conservative" ~ 1
+                                    , TRUE ~ 0)
+         , fairness = case_when(arm_story == "Fairness" ~ 1
+                                , TRUE ~ 0)
+         , purity = case_when(arm_story == "Purity" ~ 1
+                              , TRUE ~ 0)
+         # base_com - if we consider it it's own treatment
+         , base_com = case_when(arm_level == "Base" ~ 1
+                          , TRUE ~ 0)
+         # base_ind - if we consider it indepdent and therefore administered WITH Extension
+         , base_ind = case_when(arm_level == "Base" ~ 1
+                          , arm_level == "Extension" ~ 1
+                          , TRUE ~ 0)
+         , extension = case_when(arm_level == "Extension" ~ 1
+                                 , TRUE ~ 0)
+  )
+
+# Arm-specific datasets
+results_factorial_lib = results_clean_factorial %>% filter(ideology_bin == 'Liberal')
+results_factorial_con = results_clean_factorial %>% filter(ideology_bin == 'Conservative')
+
+results_factorial_fair = results_clean_factorial %>% filter(grepl('Fairness|Control', arm))
+results_factorial_pure = results_clean_factorial %>% filter(grepl('Purity|Control', arm))
+
+results_factorial_libfair = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
+results_factorial_libpure = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Purity|Control', arm))
+results_factorial_confair = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Fairness|Control', arm))
+results_factorial_conpure = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Purity|Control', arm))
+
+cross_tab_factorial = results_clean_factorial %>%
+  group_by(liberal, conservative, purity, fairness, base_com, base_ind, extension) %>%
+  summarise(n = n())
+
+# REGRESSION
+factorial_levels_com = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * purity * fairness * extension
+                                                  , data = results_clean_factorial)
+                                       , clusters_in = NA)
+
+stargazer(factorial_levels_com$lm
+          , se = list(factorial_levels_com$se_robust
+          )
+          , type = stargazer_type, header = F
+          , title            = "All Arms Factorial Specifications"
+          , column.labels    = c("Levels Independent")
+          , dep.var.caption  = "All Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          # , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:factorialmodel"
+          , single.row       = TRUE)
+```
 
 ## Covariate Balance Check
 
