@@ -10,6 +10,7 @@ output:
     fig_caption: yes
     number_sections: yes
     toc: no
+    latex_engine: xelatex
   md_document:
     variant: markdown
   html_document:
@@ -255,7 +256,7 @@ In the early 2000s, psychologists Jonathan Haidt, Craigh Joseph and Jesse Graham
 
 Moral foundations theory has often been applied to studies of political science, the differences between cultures and intuitive ethics. They offer a concrete understanding of the morals that unite and divide us all. In his book, The Righteous Mind (2012), Haidt explored how the five foundations are used by both conservatives and liberals to support moral questions in the political realm. Those leaning more to the political left are guided predominantly by harm/care and fairness/reciprocity, while those leaning right rely on all five foundations. It follows then that conservatives weigh the first two foundations less when making decisions or judgments; harm/care and fairness/reciprocity comprise one-fifth of the equation, respectively, instead of one-half.  
 
-Perhaps in a perfect world, every voter would decide on issues and candidates based on thorough research of policy and practice, but we know this is not the case. In the 2016 United States presidential election we experienced both sides trying to manipulate voter opinion by playing to emotions and the moral foundations that ground them. The Republican party paid millions of dollars to Cambridge Analytica, who leveraged large scale analytics and Facebook ads to target voters’ emotions because “content works well if it makes you very emotional.” _@price_2017; @ghosh2018 _ Democrats, on the other hand, battled to make their candidate seem more “likeable”, which is arguably not the most critical characteristic of a successful leader, and certainly not the only one. _@newton-small2016 _ Haidt would likely agree that these are examples of political organizations attempting to trigger certain moral foundations to “get your vote, your money, or your time.” But is this possible?  
+Perhaps in a perfect world, every voter would decide on issues and candidates based on thorough research of policy and practice, but we know this is not the case. In the 2016 United States presidential election we experienced both sides trying to manipulate voter opinion by playing to emotions and the moral foundations that ground them. The Republican party paid millions of dollars to Cambridge Analytica, who leveraged large scale analytics and Facebook ads to target voters' emotions because "content works well if it makes you very emotional." _@price_2017; @ghosh2018 _ Democrats, on the other hand, battled to make their candidate seem more "likeable", which is arguably not the most critical characteristic of a successful leader, and certainly not the only one. _@newton-small2016 _ Haidt would likely agree that these are examples of political organizations attempting to trigger certain moral foundations to “get your vote, your money, or your time." But is this possible?  
 
 # Hypothesis & Motivation  
 
@@ -392,7 +393,7 @@ results_response = results_clean_lim %>%
 ggplot(data = results_response
        , aes(x = Prompt, y = Response, fill = Share)) +
   geom_tile() +
-  facet_grid(rows = vars(arm_level, arm_story)
+  facet_grid(rows = vars(arm_story, arm_level)
              , cols = vars(ideology_bin)) +
   scale_fill_distiller(direction = 1, palette = 2) +
   theme_bw() +
@@ -608,6 +609,17 @@ Familiarity
 Reactions
 - Being in Base drives people slightly lower if repulsed, but mostly just noise
 - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact
+
+```{r}
+stargazer(lm(arm_level ~ gender + age + urban + ideology, data = results_armlibfair)
+          , lm(arm_level ~ gender + age + urban + ideology, data = results_armlibpure)
+          , lm(arm_level ~ gender + age + urban + ideology, data = results_armconfair)
+          , lm(arm_level ~ gender + age + urban + ideology, data = results_armconpure)
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
+          , report = ('v*c*sp')
+          , type = "text")
+```
 
 \newpage
 
