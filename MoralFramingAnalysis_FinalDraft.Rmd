@@ -455,7 +455,7 @@ stargazer(prelim_model_libfair_prelim$lm, prelim_model_libpure_prelim$lm
           , type = stargazer_type, header = F
           , se = list(prelim_model_libfair_prelim$se_robust, prelim_model_libpure_prelim$se_robust
                       , prelim_model_confair_prelim$se_robust, prelim_model_conpure_prelim$se_robust)
-          , title = "Preliminary Model - Factorial Design, by Arm (Waves 1-2 only)"
+          , title = "Preliminary Model - By Arm (Waves 1-2 only)"
           , column.labels = c("Lib + Fair", "Lib + Pure"
                               , "Con + Fair", "Con + Pure")
           , covariate.labels = c("Base Treatment", "Extension Treatment")
@@ -489,7 +489,7 @@ stargazer(model0_day$lm
                       , model1_libfair_day$se_robust, model1_libpure_day$se_robust
                       , model1_confair_day$se_robust, model1_conpure_day$se_robust
                       )
-          , title            = "Factorial Design, by Arm and Recruitment Day"
+          , title            = "By Arm, Recruitment Day Covariates"
           , column.labels    = c("Control Only"
                                  , "Lib + Fair", "Lib + Pure"
                                  , "Con + Fair", "Con + Pure")
@@ -513,20 +513,20 @@ stargazer(model0_day$lm
 
 \newpage
 
-### _We still collected more data for all arms to confirm that of factorial design, Con + Pure was most impactful (see \autoref{tab:model2})_  
+### _We still collected more data for all arms to confirm that of design, Con + Pure was most impactful (see \autoref{tab:model2})_  
 
 ```{r model_arm, echo = FALSE, results='asis'}
 model2_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
 model2_libpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
 model2_confair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
-model2_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure),  clusters_in = NA)
+model2_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure), clusters_in = NA)
 
 stargazer(model2_libfair$lm, model2_libpure$lm
           , model2_confair$lm, model2_conpure$lm
-          , type = stargazer_type, header = F
           , se = list(model2_libfair$se_robust, model2_libpure$se_robust
                       , model2_confair$se_robust, model2_conpure$se_robust)
-          , title = "Factorial Design, by Arm"
+          , type = stargazer_type, header = F
+          , title = "By Arm"
           , column.labels = c("Lib + Fair", "Lib + Pure"
                               , "Con + Fair", "Con + Pure")
           , covariate.labels = c("Base Treatment", "Extension Treatment")
@@ -543,6 +543,91 @@ stargazer(model2_libfair$lm, model2_libpure$lm
 <!-- - Still not sure if using the balanced is necessary if we're saying that day of the week is not significant   -->
 <!-- - We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.   -->
 
+### FACTORIAL SHIT
+
+```{r factorial_sandbox}
+results_clean_factorial = results_clean_lim %>%
+  mutate(liberal = case_when(ideology_bin == "Liberal" ~ 1
+                               , TRUE ~ 0)
+         , conservative = case_when(ideology_bin == "Conservative" ~ 1
+                                    , TRUE ~ 0)
+         , fairness = case_when(arm_story == "Fairness" ~ 1
+                                , TRUE ~ 0)
+         , purity = case_when(arm_story == "Purity" ~ 1
+                              , TRUE ~ 0)
+         # base_com - if we consider it it's own treatment
+         , base_com = case_when(arm_level == "Base" ~ 1
+                          , TRUE ~ 0)
+         # base_ind - if we consider it indepdent and therefore administered WITH Extension
+         , base_ind = case_when(arm_level == "Base" ~ 1
+                          , arm_level == "Extension" ~ 1
+                          , TRUE ~ 0)
+         , extension = case_when(arm_level == "Extension" ~ 1
+                                 , TRUE ~ 0)
+  )
+
+# Arm-specific datasets
+results_factorial_lib = results_clean_factorial %>% filter(ideology_bin == 'Liberal')
+results_factorial_con = results_clean_factorial %>% filter(ideology_bin == 'Conservative')
+
+results_factorial_fair = results_clean_factorial %>% filter(grepl('Fairness|Control', arm))
+results_factorial_pure = results_clean_factorial %>% filter(grepl('Purity|Control', arm))
+
+results_factorial_libfair = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
+results_factorial_libpure = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Purity|Control', arm))
+results_factorial_confair = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Fairness|Control', arm))
+results_factorial_conpure = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Purity|Control', arm))
+
+cross_tab_factorial = results_clean_factorial %>%
+  group_by(liberal, conservative, purity, fairness, base_com, base_ind, extension) %>%
+  summarise(n = n())
+
+# REGRESSION
+factorial_levels_com = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * purity * fairness * extension
+                                                  , data = results_clean_factorial)
+                                       , clusters_in = NA)
+
+stargazer(factorial_levels_com$lm
+          , se = list(factorial_levels_com$se_robust
+          )
+          , type = stargazer_type, header = F
+          , title            = "All Arms Factorial Specifications"
+          , column.labels    = c("Levels Independent")
+          , dep.var.caption  = "All Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          # , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:modelfactorial"
+          , single.row       = TRUE)
+```
+
+```{r our_spec_long}
+
+### LEFT OFF HERE ### - just think we need to isolate the stories???
+our_spec_long_con = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * arm_story * arm_level
+                                               , data = results_factorial_pure)
+                                    , clusters_in = NA)
+
+stargazer(our_spec_long_con$lm
+          # , factorial_levels_ind$lm
+          # , se = list(our_spec_long_con$se_robust
+                      # , factorial_levels_ind$se_robust
+          # )
+          , type = stargazer_type, header = F
+          , title            = "All Arms Factorial Specifications"
+          , column.labels    = c("Levels Independent")
+          , dep.var.caption  = "All Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          # , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:modelfactorial"
+          , single.row       = TRUE)
+
+```
 
 \newpage
 
