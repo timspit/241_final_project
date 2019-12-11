@@ -1,5 +1,5 @@
 ---
-title: "Swinging Foundational Views: An Experiment on the Persuasive Effects of Moral Frames"
+title: "Moving the Needle on Public Opinion: An Experiment on the Persuasive Effects of Moral Frames"
 subtitle: "W241 Experiments and Causality"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
 date: "December 10, 2019"
@@ -10,6 +10,7 @@ output:
     fig_caption: yes
     number_sections: yes
     toc: no
+    latex_engine: xelatex
   md_document:
     variant: markdown
   html_document:
@@ -32,7 +33,7 @@ packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "text" #"latex" # change to latex when ready to knit
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
 ```
 
 ```{r import, include = FALSE}
@@ -255,19 +256,19 @@ In the early 2000s, psychologists Jonathan Haidt, Craigh Joseph and Jesse Graham
 
 Moral foundations theory has often been applied to studies of political science, the differences between cultures and intuitive ethics. They offer a concrete understanding of the morals that unite and divide us all. In his book, The Righteous Mind (2012), Haidt explored how the five foundations are used by both conservatives and liberals to support moral questions in the political realm. Those leaning more to the political left are guided predominantly by harm/care and fairness/reciprocity, while those leaning right rely on all five foundations. It follows then that conservatives weigh the first two foundations less when making decisions or judgments; harm/care and fairness/reciprocity comprise one-fifth of the equation, respectively, instead of one-half.  
 
-Perhaps in a perfect world, every voter would decide on issues and candidates based on thorough research of policy and practice, but we know this is not the case. Hillary Clinton's 2016 presidential campaign fought to make her more "likeable" to voters. The Russian government purchased ads in an attempt to sway political opinions of Facebook users. Haidt would likely agree that these are examples of political organizations attempting to trigger certain moral foundations to "get your vote, your money, or your time." But is this possible?  
+Perhaps in a perfect world, every voter would decide on issues and candidates based on thorough research of policy and practice, but we know this is not the case. In the 2016 United States presidential election we experienced both sides trying to manipulate voter opinion by playing to emotions and the moral foundations that ground them. The Republican party paid millions of dollars to Cambridge Analytica, who leveraged large scale analytics and Facebook ads to target voters' emotions because "content works well if it makes you very emotional." _@price_2017; @ghosh2018 _ Democrats, on the other hand, battled to make their candidate seem more "likeable", which is arguably not the most critical characteristic of a successful leader, and certainly not the only one. _@newton-small2016 _ Haidt would likely agree that these are examples of political organizations attempting to trigger certain moral foundations to “get your vote, your money, or your time." But is this possible?  
 
 # Hypothesis & Motivation  
 
-Can tapping into one or more moral foundations modify how an individual feels about a topic, particularly those which are politically-relevant? Assume that an opinion can be represented as a point on a line, capable of moving to the left or the right (or up or down, if we want to avoid confusion with the colloquial political spectrum). With this assumption we can test the following hypothesis: framing a politically divisive topic with a targeted moral foundation can move a subject's opinion away from its original point on the line, in either direction.  
+Can tapping into one or more moral foundations modify how an individual feels about a topic, particularly those which are politically-relevant? Assume that an opinion can be represented as a point on a line, capable of moving to the left or the right (or up or down, if we want to avoid confusion with the colloquial political spectrum). With this assumption we can test the following hypothesis: **framing a politically divisive topic with a targeted moral foundation can move a subject's opinion away from its original point on the line, in either direction.**  
 
-Online marketing campaigns and social media has increased the specificity with which political campaigns--or anyone--can target individuals with persuasion (or manipulation?) tactics. A study in 2014 by Martin Day, Susan Fiske, Emily Downing and Thomas Trail examined the effects of Haidt's moral foundations on the opinions of liberals and conservatives, for what the researchers described as "pro-attitudinal and counter-attitudinal" positions on issues.  
+Online marketing campaigns and social media has increased the specificity with which political campaigns--or anyone--can target individuals with persuasion (or manipulation?) tactics. A study in 2014 by Martin Day, Susan Fiske, Emily Downing and Thomas Trail examined the effects of Haidt's moral foundations on the opinions of liberals and conservatives, for what the researchers described as "pro-attitudinal and counter-attitudinal" positions on issues. _@day2014moral _  
 
-Day et al executed two experiments to test the effects of moral foundation-based "frames". A frame can take several forms--stories, pictures, newspaper articles, to name a few. In Day's studies, the participants were shown a number of morally framed stances. For example, a "morally framed conservative stance" on immigration which targets the fairness foundation reads, "It is only fair to preserve the rights of long-term citizens ahead of recent immigrants."   
+Day et al executed two experiments to test the effects of moral foundation-based "frames". A frame can take several forms--stories, pictures, newspaper articles, to name a few. In Day's studies, the participants were shown a number of morally framed stances. For example, a "morally framed conservative stance" on immigration which targets the fairness foundation reads, "It is only fair to preserve the rights of long-term citizens ahead of recent immigrants." _@day2014moral _
 
 Both studies supported the hypothesis that an individual's political attitude is bolstered by relevant moral foundation-based frames, however only one study supported that the same frames may persuade a subject to shift his or her opinion away from one side of the political spectrum.   
 
-Another study that played a key role in defining this experiment was a paper by Lene Aaroe, Michael Bang Petersen and Kevin Arceneaux on 'Why and How Individual Differences in Disgust Sensitivity Underlie Opposition to Immigration'. The subjects are tested on their support for immigration after their disgust response is triggered. This study finds some causal factors that influence political attitudes outside of one's conscious awareness and confirms that leveraging framing as a treatment lever does produce an observable effect on subjects.   
+Another study that played a key role in defining this experiment was a paper by Lene Aaroe, Michael Bang Petersen and Kevin Arceneaux on 'Why and How Individual Differences in Disgust Sensitivity Underlie Opposition to Immigration'. _@arceneaux_2017 _ The subjects are tested on their support for immigration after their disgust response is triggered. This study finds some causal factors that influence political attitudes outside of one's conscious awareness and confirms that leveraging framing as a treatment lever does produce an observable effect on subjects.   
 
 To build on the conclusions of Day et al's work, we designed a study to measure the effect of moral foundation-based frame on opinions on Universal Basic Income (UBI). UBI is a topic for which political conservatives and liberals are generally accepted to have opposing views. To maximize resources available, we decided to only test two of the moral foundations: purity/sanctity and fairness/reciprocity.
 
@@ -275,11 +276,20 @@ To build on the conclusions of Day et al's work, we designed a study to measure 
 
 ## Participants  
 
-We recruited a sample of N adults living in the United States using Prolific, an online platform that connects researchers with participants around the world. The only control that was leveraged for the characteristics of those participants was to select adults living in the United States who did not identify as politically moderate. This was done through Prolific, an online platform that connects researchers with participants around the world. Of the N participants who began the study, all but three were from the conservative block and one from the liberal block completed all of the required tasks. Those who did not complete the survey were automatically replaced by Prolific. Those participants received $0.70 as compensation for participating in the study.
-Our study specifically targeted subjects who identified as either politically liberal or conservative. Political moderates were assumed to not have strong beliefs on either side of the spectrum, and thus would not have strong groundings in the moral foundations framework.
+Given the numerous arms of our proposed study (described in detail in Experiment Design: Procedure), we required 150 participants at an absolute minimum. We determined an online platform was the best available route to gather a sufficient random sample of this size given time, budget and geographic constraints. We recruited a total sample size of 505 adults living in the United States using Prolific, an online platform that connects researchers with participants around the world.
+
+Prolific also facilitated blocking to obtain an equal distribution of participants who identified as being either politically conservative or politically liberal. This was performed by selecting one of the prescreened characteristics for subjects who indicating their ideological identification within the US Political Spectrum.
+
+Of the 505 subjects who participated in the study, all but three from the conservative block and one from the liberal block completed all required tasks. Those who did not complete all tasks were automatically replaced by Prolific. Those participants received \$0.70 as compensation for participating in the study, and Prolific received \$0.30.
+
+Our study specifically targeted subjects who identified as either politically liberal or conservative. There is less available research on the moral groundings of political moderates, thus we did not target this group for our experiment.
+
 The subject pool comprised of XX (x%) .. Figure 1 shows further detail on the political identifications of the participants. XX (x%) identified as female, XX (x%) identified as male.
+
 Collection of participants took place over several days. We had limited funds available with which to execute the experiment, so we agreed to gather 100 conservative and 100 liberal participants in the first wave, conduct initial covariate balance checks, and proceed with additional participants as deemed necessary. 
+
 Overall, we had X waves. Table 1 provides additional information on each wave. Overall, we gathered an effective sample size for analysis of X participants: xx. stats.
+
 We have a high level of confidence in the randomization of our effective participant population due to the use of Prolific to gather subjects. Qualtrics was leveraged to randomly assign subjects to control or one of the 4 other treatment conditions so there would be an even distribution across all 5 survey arms. We noted that the temporal nature of the waves may affect responses, so this was noted as a covariate to be included during our analysis.
 
 ## Procedure  
@@ -288,11 +298,11 @@ We developed two treatment options for both moral foundations included in our ex
 
 All subjects assigned to treatment would read a "base" story designed to trigger either the purity/sanctity or fairness/reciprocity foundations. Some subjects within the treatment group were selected, via random assignment, to read an extension to the base story which offered a positive resolution to moral conflict from the base. The intended effect of the extension was to specifically trigger the participant's "pro-attitudinal..  
 
-We implemented a timer on the treatment pages of the survey requiring participants to stay on the page for at least 15-20 seconds, depending on the length of the frame. This was done to prevent subjects from clicking through the pages without adequate time to read and digest the frame.  
+We implemented a timer on the treatment pages of the survey requiring participants to stay on the page for at least 15-20 seconds, depending on the length of the frame. This was done to prevent subjects from clicking through the pages without adequate time to read and digest the frame.
 
-Figure X offers a detailed description of the four treatment arms and control arm for the experiment. Participants were randomly assigned to one of the five arms using five-way random sampling without replacement executed within the Qualtrics survey platform.  
+Figure X offers a detailed description of the four treatment arms and control arm for the experiment. Participants were randomly assigned to one of the five arms using five-way random sampling without replacement executed within the Qualtrics survey platform.
 
-After navigating through treatment or control, the subjects were asked to share their degree of support for the concept of UBI on an eleven point likert scale from zero to ten.  
+After navigating through treatment or control, the subjects were asked to share their degree of support for the concept of UBI on an eleven point likert scale from zero to ten.
 
 All participants answered the following demographic questions before concluding the survey: age, gender, urbanicity and political orientation. The political orientation demographic was requested to confirm successful blocking executed via Prolific. Subjects who self-identified as moderates in the survey were dropped from the analysis.   
 
@@ -306,11 +316,11 @@ Please refer to the Appendix of this report to view the moral foundations-frames
 
 ## Modifications  
 
-After collecting data from the first wave of participants, we analyzed gender, political orientation and reactions to the frames. We noted that there was an imbalance of gender in the conservative block, and the liberal block had generally high support of the concept of UBI. In response to the former, we used Prolific to recruit additional female conservatives, however we consequently excluded this wave from analysis due to lack of randomized collection (i.e. participants were targeted rather than randomly recruited).  
+Our first wave of participants comprised of 100 conservatives and 100 liberals split evenly amongst the 5 arms of the experiment (roughly 20 participants per arm, per block). We conducted a preliminary analysis to evaluate balance among possible covariates (e.g. gender, age), effect size and directionality. We noted that there was an imbalance of gender in the conservative block and proceeded to recruit additional female conservatives. This wave was consequently excluded from analysis due to lack of randomized collection (i.e. participants were targeted rather than randomly recruited).
 
-The latter observation eventually led us to remove the treatment arm targeting fairness/reciprocity and recruit additional participants in the conservative block in an effort to increase the statistical power of our results. Given the high support amongst liberals for UBI, it would be unlikely that we would see a measured change in attitude, particularly given our limited sample size.  
+We noted the greatest movement amongst the conservatives being treated with the purity frame. In general, the liberal block had high support of the concept of UBI, which decreased the likelihood that we would observe a measured change in attitude, particularly given our limited sample size. The conservatives generally had lower support of UBI (without treatment) and thus had more room for change in response to treatment.
 
-In a world with limitless funds, we would have been able to collect enough participants to supply sufficient power to each arm of the study, however this was not the case. Thus, we dedicated our remaining resources to the treatment arm showing promise of a statistically significant effect. 
+In a world with limitless funds, we would have been able to collect enough participants to supply sufficient power to each arm of the study, however this was not the case. Thus, we dedicated our remaining resources to the treatment arm showing promise of a statistically significant effect.
 
 # Analysis of Results  
 
@@ -383,7 +393,7 @@ results_response = results_clean_lim %>%
 ggplot(data = results_response
        , aes(x = Prompt, y = Response, fill = Share)) +
   geom_tile() +
-  facet_grid(rows = vars(arm_level, arm_story)
+  facet_grid(rows = vars(arm_story, arm_level)
              , cols = vars(ideology_bin)) +
   scale_fill_distiller(direction = 1, palette = 2) +
   theme_bw() +
@@ -445,7 +455,7 @@ stargazer(prelim_model_libfair_prelim$lm, prelim_model_libpure_prelim$lm
           , type = stargazer_type, header = F
           , se = list(prelim_model_libfair_prelim$se_robust, prelim_model_libpure_prelim$se_robust
                       , prelim_model_confair_prelim$se_robust, prelim_model_conpure_prelim$se_robust)
-          , title = "Preliminary Model - Factorial Design, by Arm (Waves 1-2 only)"
+          , title = "Preliminary Model - By Arm (Waves 1-2 only)"
           , column.labels = c("Lib + Fair", "Lib + Pure"
                               , "Con + Fair", "Con + Pure")
           , covariate.labels = c("Base Treatment", "Extension Treatment")
@@ -479,7 +489,7 @@ stargazer(model0_day$lm
                       , model1_libfair_day$se_robust, model1_libpure_day$se_robust
                       , model1_confair_day$se_robust, model1_conpure_day$se_robust
                       )
-          , title            = "Factorial Design, by Arm and Recruitment Day"
+          , title            = "By Arm, Recruitment Day Covariates"
           , column.labels    = c("Control Only"
                                  , "Lib + Fair", "Lib + Pure"
                                  , "Con + Fair", "Con + Pure")
@@ -503,20 +513,20 @@ stargazer(model0_day$lm
 
 \newpage
 
-### _We still collected more data for all arms to confirm that of factorial design, Con + Pure was most impactful (see \autoref{tab:model2})_  
+### _We still collected more data for all arms to confirm that of design, Con + Pure was most impactful (see \autoref{tab:model2})_  
 
 ```{r model_arm, echo = FALSE, results='asis'}
 model2_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
 model2_libpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
 model2_confair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
-model2_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure),  clusters_in = NA)
+model2_conpure = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconpure), clusters_in = NA)
 
 stargazer(model2_libfair$lm, model2_libpure$lm
           , model2_confair$lm, model2_conpure$lm
-          , type = stargazer_type, header = F
           , se = list(model2_libfair$se_robust, model2_libpure$se_robust
                       , model2_confair$se_robust, model2_conpure$se_robust)
-          , title = "Factorial Design, by Arm"
+          , type = stargazer_type, header = F
+          , title = "By Arm"
           , column.labels = c("Lib + Fair", "Lib + Pure"
                               , "Con + Fair", "Con + Pure")
           , covariate.labels = c("Base Treatment", "Extension Treatment")
@@ -533,6 +543,91 @@ stargazer(model2_libfair$lm, model2_libpure$lm
 <!-- - Still not sure if using the balanced is necessary if we're saying that day of the week is not significant   -->
 <!-- - We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.   -->
 
+### FACTORIAL SHIT
+
+```{r factorial_sandbox}
+results_clean_factorial = results_clean_lim %>%
+  mutate(liberal = case_when(ideology_bin == "Liberal" ~ 1
+                               , TRUE ~ 0)
+         , conservative = case_when(ideology_bin == "Conservative" ~ 1
+                                    , TRUE ~ 0)
+         , fairness = case_when(arm_story == "Fairness" ~ 1
+                                , TRUE ~ 0)
+         , purity = case_when(arm_story == "Purity" ~ 1
+                              , TRUE ~ 0)
+         # base_com - if we consider it it's own treatment
+         , base_com = case_when(arm_level == "Base" ~ 1
+                          , TRUE ~ 0)
+         # base_ind - if we consider it indepdent and therefore administered WITH Extension
+         , base_ind = case_when(arm_level == "Base" ~ 1
+                          , arm_level == "Extension" ~ 1
+                          , TRUE ~ 0)
+         , extension = case_when(arm_level == "Extension" ~ 1
+                                 , TRUE ~ 0)
+  )
+
+# Arm-specific datasets
+results_factorial_lib = results_clean_factorial %>% filter(ideology_bin == 'Liberal')
+results_factorial_con = results_clean_factorial %>% filter(ideology_bin == 'Conservative')
+
+results_factorial_fair = results_clean_factorial %>% filter(grepl('Fairness|Control', arm))
+results_factorial_pure = results_clean_factorial %>% filter(grepl('Purity|Control', arm))
+
+results_factorial_libfair = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
+results_factorial_libpure = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Purity|Control', arm))
+results_factorial_confair = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Fairness|Control', arm))
+results_factorial_conpure = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Purity|Control', arm))
+
+cross_tab_factorial = results_clean_factorial %>%
+  group_by(liberal, conservative, purity, fairness, base_com, base_ind, extension) %>%
+  summarise(n = n())
+
+# REGRESSION
+factorial_levels_com = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * purity * fairness * extension
+                                                  , data = results_clean_factorial)
+                                       , clusters_in = NA)
+
+stargazer(factorial_levels_com$lm
+          , se = list(factorial_levels_com$se_robust
+          )
+          , type = stargazer_type, header = F
+          , title            = "All Arms Factorial Specifications"
+          , column.labels    = c("Levels Independent")
+          , dep.var.caption  = "All Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          # , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:modelfactorial"
+          , single.row       = TRUE)
+```
+
+```{r our_spec_long}
+
+### LEFT OFF HERE ### - just think we need to isolate the stories???
+our_spec_long_con = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * arm_story * arm_level
+                                               , data = results_factorial_pure)
+                                    , clusters_in = NA)
+
+stargazer(our_spec_long_con$lm
+          # , factorial_levels_ind$lm
+          # , se = list(our_spec_long_con$se_robust
+                      # , factorial_levels_ind$se_robust
+          # )
+          , type = stargazer_type, header = F
+          , title            = "All Arms Factorial Specifications"
+          , column.labels    = c("Levels Independent")
+          , dep.var.caption  = "All Arms"
+          , dep.var.labels   = "UBI Ranking"
+          , notes            = "HC Robust Standard Errors"
+          # , report           = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:modelfactorial"
+          , single.row       = TRUE)
+
+```
 
 \newpage
 
@@ -557,30 +652,30 @@ results_armconpure_reaction = results_armconpure %>%
                                                 , TRUE ~ as.numeric(as.character(purity_q4_relieved_bin))) %>% factor()
          )
 # NOTE - could we keep both arms in a single regression? what would that tell us? (see next cell)
-model3_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f 
-                                                     , data = results_armconpure_reaction %>% filter(arm_level != "Extension"))
-                                              , clusters_in = NA)
-model3_conpure_reaction_ext = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
-                                                      , data = results_armconpure_reaction %>% filter(arm_level != "Base"))
+# model3_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f 
+#                                                      , data = results_armconpure_reaction %>% filter(arm_level != "Extension"))
+#                                               , clusters_in = NA)
+model3_conpure_reaction_ext = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
+                                                      , data = results_armconpure_reaction) # %>% filter(arm_level != "Base"))
                                               , clusters_in = NA)
 
 stargazer(model2_conpure$lm
           , model3_conpure_gender$lm
           , model3_conpure_familiarity$lm
-          , model3_conpure_reaction_bas$lm
+          # , model3_conpure_reaction_bas$lm
           , model3_conpure_reaction_ext$lm
           , type = stargazer_type, header = F
           , se = list(model2_conpure$se_robust
                       , model3_conpure_gender$se_robust
                       , model3_conpure_familiarity$se_robust
-                      , model3_conpure_reaction_bas$se_robust
+                      # , model3_conpure_reaction_bas$se_robust
                       , model3_conpure_reaction_ext$se_robust
           )
           , title = "Conservative + Purity Treatment Arm Interaction Specifications"
-          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction (Base)", "Reaction (Extension)")
+          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction") #" (Base)", "Reaction (Extension)")
           , covariate.labels = c("Base Treatment", "Extension Treatment"
                                  , "Male", "Familiar w/ UBI"
-                                 , "Repulsed", "Relieved")
+                                 , "Repulsed", "Relieved", "Repulsed then Relieved")
           , dep.var.caption  = "Con + Pure Arm Only"
           , dep.var.labels   = "UBI Ranking"
           , notes = "HC Robust Standard Errors"
@@ -600,56 +695,16 @@ Reactions
 - Being in Base drives people slightly lower if repulsed, but mostly just noise
 - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact
 
-```{r model_reactions_combine, echo = FALSE, results = 'asis'}
-model3_conpure_reaction_com = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
-                                                     , data = results_armconpure_reaction)
-                                              , clusters_in = NA)
-stargazer(model3_conpure_reaction_com$lm
-          , type = stargazer_type, header = F
-          , se = list(model3_conpure_reaction_com$se_robust)
-          , title = "Conservative + Purity Treatment Arm Reaction Interaction (Combine)"
-          , column.labels = c("Reaction (Both Arms)")
-          , covariate.labels = c("Base Treatment", "Extension Treatment"
-                                 , "Repulsed", "Relieved")
-          , dep.var.caption  = "Con + Pure Arm Only"
-          , dep.var.labels   = "UBI Ranking"
-          , notes = "HC Robust Standard Errors"
+```{r}
+stargazer(lm(arm_level ~ gender + age + urban + ideology, data = results_armlibfair)
+          , lm(arm_level ~ gender + age + urban + ideology, data = results_armlibpure)
+          , lm(arm_level ~ gender + age + urban + ideology, data = results_armconfair)
+          , lm(arm_level ~ gender + age + urban + ideology, data = results_armconpure)
+          , column.labels = c("Lib + Fair", "Lib + Pure"
+                              , "Con + Fair", "Con + Pure")
           , report = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:model3reactcombine"
-          )
+          , type = "text")
 ```
-
-```{r model_ALL_fuckit, echo = FALSE, results = 'asis'}
-model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + gender + ubi_familiarity_bin + purity_q2_repulsed_bin_f + purity_q4_relieved_bin_f
-                                                , data = results_armconpure_reaction)
-                                     , clusters_in = NA)
-# model3_conpure_ALL = custom_lm_calcs(lm_in = lm(ubi_number ~ gender * purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
-#                                                 , data = results_armconpure_reaction)
-#                                      , clusters_in = NA)
-stargazer(model3_conpure_ALL$lm
-          , type = stargazer_type, header = F
-          , se = list(model3_conpure_ALL$se_robust)
-          , title = "Conservative + Purity Treatment Arm ALL Interactions"
-          # , column.labels = c("Reaction (Both Arms)")
-          # , covariate.labels = c("Base Treatment", "Extension Treatment"
-          #                        , "Repulsed", "Relieved")
-          , dep.var.caption  = "Con + Pure Arm Only"
-          , dep.var.labels   = "UBI Ranking"
-          , notes = "HC Robust Standard Errors"
-          , report = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:model3ALL"
-          )
-
-# results_armconpure_reaction %>% group_by(arm_level, gender, purity_q2_repulsed_bin_f, purity_q4_relieved_bin_f) %>% 
-#   summarise(mean_ubi = mean(ubi_number)
-#             , n = n())
-```
-NOTES:
-There are some interesting ways to specificy this to see if treatment garnered the intended response and how they effected genders differently, but small n may be distorting how usable those specifications are  
 
 \newpage
 
@@ -769,6 +824,43 @@ stargazer(model2_sratday
 ```
 <!-- NOTES: -->
 <!-- - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter -->
+
+
+## Covariate Balance Check
+
+```{r model_arm_cov_baalaance, echo = FALSE, results='asis'}
+arm_pur_base = custom_lm_calcs(lm_in = lm(arm=="Purity_Base" ~ age + gender + urban, data = results_clean_lim %>% 
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_pur_ext = custom_lm_calcs(lm_in = lm(arm=="Purity_Extension" ~ age + gender + urban, data = results_clean_lim %>% 
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_fair_base = custom_lm_calcs(lm_in = lm(arm=="Fairness_Base" ~ age + gender + urban, data = results_clean_lim %>% 
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_fair_ext = custom_lm_calcs(lm_in = lm(arm=="Fairness_Extension" ~ age + gender + urban, data = results_clean_lim %>%
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_control = custom_lm_calcs(lm_in = lm(arm=="Control" ~ age + gender + urban, data = results_clean_lim %>%
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+
+
+stargazer(arm_pur_base$lm, arm_pur_ext$lm, arm_fair_base$lm, arm_fair_ext$lm, arm_control$lm
+          , type = stargazer_type, header = F
+          , se = list(arm_pur_base$se_robust, arm_pur_ext$se_robust, arm_fair_base$se_robust, arm_fair_ext$se_robust, arm_control$se_robust)
+          , title = "Preliminary Model - Covarience Check by Arm (Waves 1-2 only)"
+          #, column.labels = c("Purity_Base", "Purity_Extension", "Fairness_Base", "Fairness_Extension", "Control")
+#          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          #, dep.var.caption  = "Four Study Arms"
+          #, dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:prelimmodel"
+)
+```
 
 \pagebreak
 
