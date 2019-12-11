@@ -33,7 +33,7 @@ packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "text" #"latex" # change to latex when ready to knit
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
 ```
 
 ```{r import, include = FALSE}
@@ -824,6 +824,43 @@ stargazer(model2_sratday
 ```
 <!-- NOTES: -->
 <!-- - 1.072** is the same here when strifying as with below not stratifying - further evidence day doesn't matter -->
+
+
+## Covariate Balance Check
+
+```{r model_arm_cov_baalaance, echo = FALSE, results='asis'}
+arm_pur_base = custom_lm_calcs(lm_in = lm(arm=="Purity_Base" ~ age + gender + urban, data = results_clean_lim %>% 
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_pur_ext = custom_lm_calcs(lm_in = lm(arm=="Purity_Extension" ~ age + gender + urban, data = results_clean_lim %>% 
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_fair_base = custom_lm_calcs(lm_in = lm(arm=="Fairness_Base" ~ age + gender + urban, data = results_clean_lim %>% 
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_fair_ext = custom_lm_calcs(lm_in = lm(arm=="Fairness_Extension" ~ age + gender + urban, data = results_clean_lim %>%
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+arm_control = custom_lm_calcs(lm_in = lm(arm=="Control" ~ age + gender + urban, data = results_clean_lim %>%
+                                                           filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
+                                              , clusters_in = NA)
+
+
+stargazer(arm_pur_base$lm, arm_pur_ext$lm, arm_fair_base$lm, arm_fair_ext$lm, arm_control$lm
+          , type = stargazer_type, header = F
+          , se = list(arm_pur_base$se_robust, arm_pur_ext$se_robust, arm_fair_base$se_robust, arm_fair_ext$se_robust, arm_control$se_robust)
+          , title = "Preliminary Model - Covarience Check by Arm (Waves 1-2 only)"
+          #, column.labels = c("Purity_Base", "Purity_Extension", "Fairness_Base", "Fairness_Extension", "Control")
+#          , covariate.labels = c("Base Treatment", "Extension Treatment")
+          #, dep.var.caption  = "Four Study Arms"
+          #, dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , label            = "tab:prelimmodel"
+)
+```
 
 \pagebreak
 
