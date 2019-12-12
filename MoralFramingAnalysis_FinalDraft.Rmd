@@ -33,7 +33,7 @@ packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "latex" #"latex" # change to latex when ready to knit
+stargazer_type = "text" #"latex" # change to latex when ready to knit
 ```
 
 ```{r import, include = FALSE}
@@ -324,10 +324,6 @@ In a world with limitless funds, we would have been able to collect enough parti
 
 # Analysis of Results  
 
-## Comparison of Potential Outcomes  
-
-_[TBD]_  
-
 ## Data  
 
 ```{r exploratory_demographics, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
@@ -342,6 +338,7 @@ plot_ideology = ggplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
 
+# Backbone ggplot object
 grpstackbar_plot = ggplot() +
   facet_grid( ~ ideology_bin) +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
@@ -363,22 +360,26 @@ plot_urban = grpstackbar_plot +
              summarise(Count = n()) %>% rename("Ideology" = ideology, "Urban" = urban)
            , aes(x = Urban, y = Count, fill = Ideology), stat = "identity", show.legend = FALSE)
 
+# Histogram of familiarity
+plot_familiarity = grpstackbar_plot +
+  geom_bar(data = results_clean_lim %>% filter(!is.na(ubi_familiarity)) %>% 
+                            group_by(ubi_familiarity, ideology, ideology_bin) %>% 
+                            summarise(Count = n()) %>%
+                            rename("Ideology" = ideology, "UBI Familiarity" = ubi_familiarity)
+       , aes(x = `UBI Familiarity`, y = Count, fill = Ideology), stat="identity", show.legend = FALSE)
+
+# PLOT
 grid.arrange(plot_ideology, plot_gender
-             , plot_age, plot_urban
+             , plot_age, plot_familiarity
              , nrow = 2)
 ```
 
 ```{r exploratory_reactions, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
 results_response = results_clean_lim %>%
-  select(ideology_bin, arm_level, arm_story
-         , "PURE: See myself" = purity_q1_self
-         , "PURE: Felt repulsed" = purity_q2_repulsed
-         # , purity_q3_injustice
-         , "PURE: Felt relieved" = purity_q4_relieved
-         , "FAIR: See myself" = fairness_q1_self
-         , "FAIR: Felt pain" = fairness_q2_pain
-         # , fairness_q3_injustice
-         , "FAIR: Felt relieved" = fairness_q4_relieved) %>% 
+  mutate("See myself" = case_when(arm_story == "Purity" ~ purity_q1_self, TRUE ~ fairness_q1_self)
+         , "Felt repulsed/pain" = case_when(arm_story == "Purity" ~ purity_q2_repulsed, TRUE ~ fairness_q2_pain) 
+         , "Felt relieved" = case_when(arm_story == "Purity" ~ purity_q4_relieved, TRUE ~ fairness_q4_relieved)) %>% 
+  select(ideology_bin, arm_level, arm_story, `See myself`, `Felt repulsed/pain`, `Felt relieved`) %>%
   gather(prompt, value, -ideology_bin, -arm_level, -arm_story) %>%
   filter(!is.na(value)) %>%
   group_by(ideology_bin, arm_level, arm_story, prompt, value) %>%
@@ -387,9 +388,8 @@ results_response = results_clean_lim %>%
   group_by(ideology_bin, arm_level, arm_story, prompt) %>%
   mutate(count_total_cohort = sum(count)
          , Share = count/count_total_cohort
-         , Prompt = factor(prompt, levels = c("PURE: See myself", "PURE: Felt repulsed", "PURE: Felt relieved"
-                                              , "FAIR: See myself", "FAIR: Felt pain", "FAIR: Felt relieved")))
-
+         , Prompt = factor(prompt, levels = c("See myself", "Felt repulsed/pain", "Felt relieved")))
+  
 ggplot(data = results_response
        , aes(x = Prompt, y = Response, fill = Share)) +
   geom_tile() +
@@ -399,35 +399,6 @@ ggplot(data = results_response
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)
         , legend.position = "none")
-```
-
-```{r exploratory_outcome, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Outcomes"}
-# Histogram of familiarity
-plot_familiarity = ggplot(data = results_clean_lim %>% filter(!is.na(ubi_familiarity)) %>% 
-                            group_by(ubi_familiarity, ideology, ideology_bin) %>% 
-                            summarise(Count = n()) %>%
-                            rename("Ideology" = ideology, "UBI Familiarity" = ubi_familiarity)
-       , aes(x = `UBI Familiarity`, y = Count, fill = Ideology)) +
-  geom_bar(stat="identity", show.legend = FALSE) +
-  facet_grid( ~ ideology_bin) +
-  scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Heat map of number UBI like
-plot_ubi = ggplot(data = results_clean_lim %>% filter(!is.na(ubi_familiarity)) %>%
-                    group_by(ubi_familiarity, ideology) %>% 
-                    summarise("Average UBI Rank" = mean(ubi_number)) %>%
-                    rename("Ideology" = ideology, "UBI Familiarity" = ubi_familiarity)
-       , aes(x = `UBI Familiarity`, y = Ideology, fill = `Average UBI Rank`)) +
-  geom_tile() +
-  scale_fill_distiller(direction = 1, palette = 2) +
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)
-        , legend.position = "right")
-
-grid.arrange(plot_familiarity, plot_ubi
-              , nrow = 2)
 ```
 
 \newpage
@@ -463,6 +434,7 @@ stargazer(model_libfair$lm, model_libpure$lm
           , report = ('v*c*sp')
           , font.size        = "small"
           , column.sep.width = "1pt"
+          , single.row       = TRUE
           , label            = "tab:allarmsmodel"
 )
 ```
@@ -472,7 +444,7 @@ stargazer(model_libfair$lm, model_libpure$lm
 
 \newpage
 
-### _We tested hypotheses about covariates that might affect outcomes with our arm of interest: Con + Pure (see \autoref{tab:model3})_  
+_We tested hypotheses about covariates that might affect outcomes with our arm of interest: Con + Pure (see \autoref{tab:model3})_  
 
 ```{r model_conpure_interactions, echo = FALSE, results='asis'}
 
@@ -485,44 +457,39 @@ model_conpure_familiarity = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + 
                                                     , data = results_armconpure)
                                              , clusters_in = NA)
 
-# Reaction
+# Reaction (need to re-factor reactions first)
 results_armconpure_reaction = results_armconpure %>%
   mutate(purity_q2_repulsed_bin_f = case_when(is.na(purity_q2_repulsed_bin) ~ 0
                                               , TRUE ~ as.numeric(as.character(purity_q2_repulsed_bin))) %>% factor()
          , purity_q4_relieved_bin_f = case_when(is.na(purity_q4_relieved_bin) ~ 0
                                                 , TRUE ~ as.numeric(as.character(purity_q4_relieved_bin))) %>% factor()
          )
-# NOTE - could we keep both arms in a single regression? what would that tell us? (see next cell)
-# model_conpure_reaction_bas = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f 
-#                                                      , data = results_armconpure_reaction %>% filter(arm_level != "Extension"))
-#                                               , clusters_in = NA)
-model_conpure_reaction_ext = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
-                                                      , data = results_armconpure_reaction) # %>% filter(arm_level != "Base"))
-                                              , clusters_in = NA)
+model_conpure_reaction = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level + purity_q2_repulsed_bin_f * purity_q4_relieved_bin_f
+                                                    , data = results_armconpure_reaction)
+                                         , clusters_in = NA)
 
 stargazer(model_conpure$lm
           , model_conpure_gender$lm
           , model_conpure_familiarity$lm
-          # , model_conpure_reaction_bas$lm
-          , model_conpure_reaction_ext$lm
+          , model_conpure_reaction$lm
           , type = stargazer_type, header = F
           , se = list(model_conpure$se_robust
                       , model_conpure_gender$se_robust
                       , model_conpure_familiarity$se_robust
-                      # , model_conpure_reaction_bas$se_robust
-                      , model_conpure_reaction_ext$se_robust
+                      , model_conpure_reaction$se_robust
           )
           , title = "Conservative + Purity Treatment Arm Interaction Specifications"
-          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction") #" (Base)", "Reaction (Extension)")
+          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction") 
           , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment"
                                  , "Male", "Familiar w/ UBI"
                                  , "Repulsed", "Relieved", "Repulsed then Relieved")
           , dep.var.caption  = "Con + Pure Arm Only"
           , dep.var.labels   = "UBI Ranking"
-          , notes = "HC Robust Standard Errors"
-          , report = ('v*c*sp')
+          , notes            = "HC Robust Standard Errors"
+          , report           = ('v*c*sp')
           , font.size        = "small"
           , column.sep.width = "1pt"
+          , single.row       = TRUE
           , label            = "tab:model3"
 )
 ```
