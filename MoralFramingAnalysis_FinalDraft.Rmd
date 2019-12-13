@@ -503,6 +503,42 @@ stargazer(model_conpure$lm
 <!-- - Being in Base drives people slightly lower if repulsed, but mostly just noise -->
 <!-- - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact -->
 
+
+```{r}
+# model_libfair_react = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
+# model_libpure_react = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibpure), clusters_in = NA)
+# model_confair_react = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armconfair), clusters_in = NA)
+model_pureext_react = custom_lm_calcs(lm_in = lm(purity_q4_relieved_bin ~ ideology_bin
+                                                  , data = results_factorial_pure %>% filter(arm_level == "Extension")), clusters_in = NA)
+
+results_factorial_pure %>% filter(arm_level == "Extension") %>% 
+  group_by(ideology_bin, purity_q4_relieved_bin) %>% summarise(n = n())
+
+stargazer(model_pureext_react$lm
+          # , model_libpure_react$lm
+          # , model_confair_react$lm
+          # , model_conpure_react$lm
+          , se = list(model_pureext_react$se_robust
+                      # , model_libpure_react$se_robust
+                      # , model_confair_react$se_robust
+                      # , model_conpure_react$se_robust
+                      )
+          , type = stargazer_type, header = F
+          , title = "By Arm"
+          # , column.labels = c("Lib + Fair", "Lib + Pure"
+          #                     , "Con + Fair", "Con + Pure")
+          # , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment")
+          # , dep.var.caption  = "Four Study Arms"
+          # , dep.var.labels   = "UBI Ranking"
+          , notes = "HC Robust Standard Errors"
+          , report = ('v*c*sp')
+          , font.size        = "small"
+          , column.sep.width = "1pt"
+          , single.row       = TRUE
+          , label            = "tab:allarmsmodel"
+)
+```
+
 \newpage
 
 # Conclusion  
