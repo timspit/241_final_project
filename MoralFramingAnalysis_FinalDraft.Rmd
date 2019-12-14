@@ -33,7 +33,7 @@ packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
 
-stargazer_type = "text" #"latex" # change to latex when ready to knit
+stargazer_type = "latex" #"latex" # change to latex when ready to knit
 ```
 
 ```{r import, include = FALSE}
@@ -409,24 +409,15 @@ Our first wave of participants comprised of 100 conservatives and 100 liberals s
 
 We noted the greatest movement amongst the conservatives being treated with the purity frame. In general, the liberal block had high support of the concept of UBI, which decreased the likelihood that we would observe a measured change in attitude, particularly given our limited sample size. The conservatives generally had lower support of UBI (without treatment) and thus had more room for change in response to treatment.
 
-In a world with limitless funds, we would have been able to collect enough participants to supply sufficient power to each arm of the study, however this was not the case. Thus, we dedicated our remaining resources to the treatment arm showing promise of a statistically significant effect.
+In a world with limitless funds, we would have been able to collect enough participants to supply sufficient power to each arm of the study, however this was not the case. Thus, we dedicated our remaining resources to the treatment arm showing promise of a statistically significant effect.  
 
 # Analysis of Results  
 
+## Data  
+
+Given our "waves" approach to data collection, we wanted to ensure the wave/day blocking did not introduce an effect on our results, such as weekdays, weekends, or time of time affecting baseline opinions of UBI. \autoref{tab:wavestratmodel} in the **Appendix** further details this test.  We found that the waves did not have a meaningful effect and as such moved forward withanalyzing the pooled data.  
+
 ## Models  
-
-_\autoref{tab:allarmsmodel})_ presents the results of all treatments collected. Note that while our survey design included an approach to test all combinations of political ideology (`ideology`: liberal/conservative), moral foundation (`arm_story`; purity/fiarness), and directionality (`arm_level`; base/extension) we did not hypothesize that a strict factorial design would be valuable and therefore did not test the treatments as such. Instead, we hypothesized that specific moral foundations would resonate differently among participants of different ideologies, and therefore tested effect of changes in directionality (`arm_level`) within each of the four arms comprised of combinations of ideology and story.  
-
-The results demonstrate that the extension of the Purity foundation story, when shown to the Conservative participants, may positively affect participant opinions of UBI. This finding fits our prior expectation, which motivated us to focus on this arm as we gathered additional data. The Conservative participants had both a lower baseline opinion of UBI, which means that upward movement was possible, and the Purity story was expected to resonate with Conservatives. Therefore, the Extension (positive) treatment of the Purity story would logically leave Conservatives who would otherwise, ideologically, perhaps be skeptical of UBI, feeling optimistic and focused on purity - making them more amendable to helping.  
-
-Our Base implementation (negative) only minimal upward coefficient
-Our hypothesis was that some of the negative/Base treatments could have heterogeneous effects depending on interpretation of UBI in the context
-Liberals already started so high
-Prior research indicated conservatives would be likely to respond to Purity
-
-
-[^1]    
-_We still collected more data for all arms to confirm that of design, Con + Pure was most impactful (see _  
 
 ```{r model_all_arms, echo = FALSE, results='asis'}
 model_libfair = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair), clusters_in = NA)
@@ -438,28 +429,33 @@ stargazer(model_libfair$lm, model_libpure$lm
           , model_confair$lm, model_conpure$lm
           , se = list(model_libfair$se_robust, model_libpure$se_robust
                       , model_confair$se_robust, model_conpure$se_robust)
-          , type = stargazer_type, header = F
-          , title = "By Arm"
-          , column.labels = c("Lib + Fair", "Lib + Pure"
-                              , "Con + Fair", "Con + Pure")
-          , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment")
+          , report           = ('v*c*sp')
+          , header           = F
+          , title            = "By Arm"
           , dep.var.caption  = "Four Study Arms"
           , dep.var.labels   = "UBI Ranking"
-          , notes = "HC Robust Standard Errors"
-          , report = ('v*c*sp')
+          , column.labels    = c("Lib + Fair", "Lib + Pure"
+                                 , "Con + Fair", "Con + Pure")
+          , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment")
+          , notes            = c("HC Robust Standard Errors"
+                                 , "Lib = Liberal | Con = Conservative"
+                                 , "Pure = Purity Frame | Fair = Fairness Frame")
           , font.size        = "small"
           , column.sep.width = "1pt"
-          , single.row       = TRUE
           , label            = "tab:allarmsmodel"
+          , type             = stargazer_type
 )
 ```
-<!-- NOTES:   -->
-<!-- - Still not sure if using the balanced is necessary if we're saying that day of the week is not significant   -->
-<!-- - We lost some significane on the Con + Pure Extension, because we removed the 10 control women? Think we can add them back.   -->
+
+_\autoref{tab:allarmsmodel})_ presents the results of all treatments collected. Note that while our survey design included an approach to test all combinations of political ideology (`ideology`; liberal/conservative), moral foundation (`arm_story`; purity/fairness), and directionality (`arm_level`; base/extension) we did not hypothesize that a factorial design would be appropriate and therefore did not test the treatments as such. Instead, we hypothesized that specific moral foundations would resonate differently among participants of different ideologies, and therefore tested the effect of changes in directionality (`ubi_number ~ arm_level`) within each of the four arms (comprised of combinations of ideology and moral foundation).  
+
+The results demonstrate that the extension of the Purity foundation story, when shown to the Conservative participants, may positively affect participant opinions of UBI. This finding fits our prior expectation, which motivated us to focus on this arm as we gathered additional data. The Conservative participants had both a lower baseline opinion of UBI (`round(model_conpure$lm$coefficients["(Intercept)"],2)`), which means that upward influence was possible, and the Purity story was expected to resonate the most with Conservatives (according to existing research). Therefore, the Extension (positive) treatment of the Purity story would logically leave Conservatives who would otherwise, on average, perhaps be skeptical of UBI, feeling optimistic and focused on purity - making them more amenable to helping.  
+
+The Base (negative) implementation of purity showed only minimal upward influence but was not statistically significant. Our prior hypothesis was that negative use of a moral foundation may not be internalized consistently among participants: while some may react to an "impure" scenario of homelessness and believe that a social program like UBI would enable more impure behavior, others may see UBI as a remedy for that homelessness.  
+
+Liberal baseline opinions of UBI were so high to begin with that our hypothesized influence of some treatments were not meaningful - all coefficients of treatments for Liberals are minimally negative and not statistically significant. The value in this finding could be further explored with additional studies.  
 
 \newpage
-
-_We tested hypotheses about covariates that might affect outcomes with our arm of interest: Con + Pure (see \autoref{tab:model3})_  
 
 ```{r model_conpure_interactions, echo = FALSE, results='asis'}
 
@@ -487,55 +483,55 @@ stargazer(model_conpure$lm
           , model_conpure_gender$lm
           , model_conpure_familiarity$lm
           , model_conpure_reaction$lm
-          , type = stargazer_type, header = F
           , se = list(model_conpure$se_robust
                       , model_conpure_gender$se_robust
                       , model_conpure_familiarity$se_robust
                       , model_conpure_reaction$se_robust
           )
-          , title = "Conservative + Purity Treatment Arm Interaction Specifications"
-          , column.labels = c("No Covariates", "Gender", "UBI Familiarity", "Reaction") 
+          , report           = ('v*c*sp')
+          , header           = F
+          , title            = "Conservative + Purity Treatment Arm Interaction Specifications"
+          , dep.var.caption  = "Con + Pure Arm Only"
+          , dep.var.labels   = "UBI Ranking"
+          , column.labels    = c("No Covariates", "Gender", "UBI Familiarity", "Reaction") 
           , covariate.labels = c("Base Only Treatment", "Base + Extension Treatment"
                                  , "Male", "Familiar w/ UBI"
                                  , "Repulsed", "Relieved", "Repulsed then Relieved")
-          , dep.var.caption  = "Con + Pure Arm Only"
-          , dep.var.labels   = "UBI Ranking"
-          , notes            = "HC Robust Standard Errors"
-          , report           = ('v*c*sp')
+          , notes            = c("HC Robust Standard Errors"
+                                 , "Lib = Liberal | Con = Conservative"
+                                 , "Pure = Purity Frame | Fair = Fairness Frame")
           , font.size        = "small"
           , column.sep.width = "1pt"
-          , single.row       = TRUE
-          , label            = "tab:model3"
+          , label            = "tab:covariatesmodel"
+          , type             = stargazer_type
 )
 ```
-<!-- NOTES: -->
-<!-- Gender -->
-<!-- - Gender gap still interesting - a significant baseline difference between genders  -->
-<!-- Familiarity -->
-<!-- - Being familiar with UBI makes conservatives lower at baseline -->
-<!-- - Really just noise based on no change in treatment effect -->
-<!-- Reactions -->
-<!-- - Being in Base drives people slightly lower if repulsed, but mostly just noise -->
-<!-- - Being in Extension drives people lower if they are NOT relieved - but being relieved is a big positive impact -->
 
+Given our focus on the Conservative Purity arms, we also tested covariate specifications to test if our measured average treatment effect was being driven by any baseline differences between arms or if, in fact, our treatments were leading to reactions that fueled changes of opinion. _\autoref{tab:covariatesmodel}_ details these results.  
+
+Gender has a significant difference at baseline (`ubi_number ~ arm_level + gender`): men had, on average, a >1 point higher baseline opinion of UBI than women. Interestingly, however, the average effect is still consistent even when accounting for this difference.  
+
+Being familiar with UBI was associated with a slightly lower, though statistically insignificant, conservative baseline opinion of UBI (`ubi_number ~ arm_level + ubi_familiarity_bin`). Our prior hypothesis was that familiarity with UBI may "entrench" participants and make them less amenable to a shift in opinion when compared to participants encountering the policy for the first time, but we find an almost identical treatment effect even when controlling for this difference.  
+
+Given that neither of our hypothesized baseline differences from gender of UBI familiarity had a meaningful effect on the outcome, we then tested a specification using participants reactions as covariates to identify if those who reported to have experienced the reactions we intended from the treatments were more likely to drive the effect we hypothesized from that reaction. The strongest coefficient was of that for participants who reported feeling repulsed by the base portion of the story and then relieved by the extension portion. This is precisely the effect we were intending and, with a coefficient of 2.163, is a large effect relative to all other treatments. Participants that reported being repulsed without then feeling relieved and participants only reporting feeling relieved were associated with outcome measures directionally in line with our hypotheses (repulsed causes decrease, relieved causes increase) but were not statistically significant.  
 
 \newpage
 
-_Given that we collected in waves, wanted to ensure the wave/day blocking did not introduce an effect on our results (see \autoref{tab:wavestratmodel})_  
-
-_Our design was not factorial (see \autoref{tab:factorialmodel}), which should preobably be deleted_  
-
 # Conclusion  
-
-Our experiment leveraging the concept of Universal Basic Income demonstrates that political attitudes can shift (TBC) through exposure to moral foundations.  
 
 ## Discussion
 
-_[[TBD]]_  
+Our experiment demonstrates that it may be possible to affect attitudes toward political topics through exposure to moral foundations. As has been noted in this report, the applications of this type of finding are widespread and underpin many forms of persuasion, argumentation, and marketing currently employed in various domains: politics, advertising, etc. However, the generalizability of this finding is questionable and will be further detailed in the Limitations section below.   
 
 ## Limitations
 
-_[[TBD]]_   
+Isolating effect attributable to a specific moral foundation is not feasible
+Any stimuli can trigger multiple moral foundations
+In effect, this experiment only tests the effectiveness of our stimuli in effecting these outcomes, because any subsequent adaptation of this message/imagery could contain nuanced differences that could affect results
+In practical terms, while this finding may seem to be immediately applicable in analogous fields (e.g. a politician proposing universal healthcare may see an opportunity to frame their arguments in purity foundations to persuade otherwise reticent conservative constituents) the generalizability of this finding to other topics and stimuli is beyond the scope of this project. 
+Many stimuli and targets would need to be tested while controlling for nuances between stimuli
+ 
+\pagebreak
 
 # Appendix  
 
@@ -558,33 +554,17 @@ grid.raster(flowchart_img)
 
 ## Data Dictionary
 
-| Variable Name | Variable | Values | Notes |
-| :---- | :-------- | :-------- | :----- |
-| prolific_pid | User ID | 10-digit numeric ||
-| panel |||||
-| arm |||||
-| node |||||
-| arm_level |||||
-| ideology |||||
-| ideology_bin |||||
-| age |||||
-| gender |||||
-| urban |||||
-| employment_status |||||
-| student_status |||||
-| purity_q1_self |||||
-| purity_q2_repulsed |||||
-| purity_q3_injustice |||||
-| purity_q4_relieved |||||
-| fairness_q1_self |||||
-| fairness_q2_pain |||||
-| fairness_q3_injustice |||||
-| fairness_q4_relieved |||||
-| open_text_reaction |||||
-| ubi_number | UBI Number | Integer 0-10 |||
-| ubi_group |||||
-| ubi_familiarity |||||
-| ubi_familiarity_bin |||||
+| Variable Name | Variable | Values |
+| :---- | :-------- | :-------- | 
+| `prolific_pid` | User ID | 24-digit alphanumeric |
+| `arm_story` | Treatment Story | Control, Purity, or Fairness |
+| `arm_level` | Treatment Level | Control, Base, or Extension |
+| `ideology_bin` | Ideology| Conservative or Liberal |
+| `ubi_number` | UBI Ranking | 0 (least) - 10 (most) support for UBI |
+| `gender` | Gender | Male or Female |
+| `ubi_familiarity_bin` | UBI Familiarity | 0 (None/A little) or 1 (Any higher familiarity) |
+| `purity_q2_repulsed_bin` | Repulsed | 0 (None/A little) or 1 (Any higher reaction) |
+| `purity_q4_relieved_bin` | Relieved | 0 (None/A little) or 1 (Any higher reaction) |
 
 \pagebreak
 
@@ -592,9 +572,15 @@ grid.raster(flowchart_img)
 
 _[[TBD]]_  
 
+```{r vignette_purity_images_base, echo = FALSE, fig.show='hold', out.width = "50%", fig.align = "default"}
+# EXAMPLE of how to include images - rest of the images to be added with text
+knitr::include_graphics("images/vignette_purity_base1.png")
+knitr::include_graphics("images/vignette_purity_base2.png")
+```
+
 ## Covariate Balance Check
 
-```{r model_arm_cov_baalaance, echo = FALSE, results='asis'}
+```{r model_arm_cov_balaance, echo = FALSE, results='asis'}
 arm_pur_base = custom_lm_calcs(lm_in = lm(arm=="Purity_Base" ~ age + gender + urban, data = results_clean_lim %>% 
                                                            filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
                                               , clusters_in = NA)
@@ -612,19 +598,30 @@ arm_control = custom_lm_calcs(lm_in = lm(arm=="Control" ~ age + gender + urban, 
                                               , clusters_in = NA)
 
 
-stargazer(arm_pur_base$lm, arm_pur_ext$lm, arm_fair_base$lm, arm_fair_ext$lm, arm_control$lm
-          , type = stargazer_type, header = F
-          , se = list(arm_pur_base$se_robust, arm_pur_ext$se_robust, arm_fair_base$se_robust, arm_fair_ext$se_robust, arm_control$se_robust)
-          , title = "Preliminary Model - Covarience Check by Arm (Waves 1-2 only)"
-          #, column.labels = c("Purity_Base", "Purity_Extension", "Fairness_Base", "Fairness_Extension", "Control")
-#          , covariate.labels = c("Base Treatment", "Extension Treatment")
-          #, dep.var.caption  = "Four Study Arms"
-          #, dep.var.labels   = "UBI Ranking"
-          , notes = "HC Robust Standard Errors"
-          , report = ('v*c*sp')
+stargazer(arm_pur_base$lm
+          , arm_pur_ext$lm
+          , arm_fair_base$lm
+          , arm_fair_ext$lm
+          , arm_control$lm
+          , se = list(arm_pur_base$se_robust
+                      , arm_pur_ext$se_robust
+                      , arm_fair_base$se_robust
+                      , arm_fair_ext$se_robust
+                      , arm_control$se_robust)
+          # , report           = ('v*c*sp')
+          , header           = F
+          , title            = "Preliminary Model - Covarience Check by Arm (Waves 1-2 only)"
+          , dep.var.caption  = "Four Study Arms"
+          , dep.var.labels   = c("UBI Ranking")
+          , column.labels    = c("Pure Base", "Pure Ext", "Fair Base", "Fair Ext", "Control")
+          , notes            = c("HC Robust Standard Errors"
+                                 , "Pure = Purity Frame | Fair = Fairness Frame"
+                                 , "Base = Base Only | Ext = Base + Extension")
           , font.size        = "small"
           , column.sep.width = "1pt"
-          # , label            = "tab:prelimmodel"
+          , label            = "tab:covbalancecheck"
+          , type             = stargazer_type
+          , single.row       = TRUE
 )
 ```  
 
@@ -699,64 +696,6 @@ stargazer(model_control_day$lm
 <!-- - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level   -->
 <!-- - Day of recuitment/wave not significant across any arms   -->
 <!-- - Therefore, no need to stratify -->
-
-```{r factorial_sandbox}
-results_clean_factorial = results_clean_lim %>%
-  mutate(liberal = case_when(ideology_bin == "Liberal" ~ 1
-                               , TRUE ~ 0)
-         , conservative = case_when(ideology_bin == "Conservative" ~ 1
-                                    , TRUE ~ 0)
-         , fairness = case_when(arm_story == "Fairness" ~ 1
-                                , TRUE ~ 0)
-         , purity = case_when(arm_story == "Purity" ~ 1
-                              , TRUE ~ 0)
-         # base_com - if we consider it it's own treatment
-         , base_com = case_when(arm_level == "Base" ~ 1
-                          , TRUE ~ 0)
-         # base_ind - if we consider it indepdent and therefore administered WITH Extension
-         , base_ind = case_when(arm_level == "Base" ~ 1
-                          , arm_level == "Extension" ~ 1
-                          , TRUE ~ 0)
-         , extension = case_when(arm_level == "Extension" ~ 1
-                                 , TRUE ~ 0)
-  )
-
-# Arm-specific datasets
-results_factorial_lib = results_clean_factorial %>% filter(ideology_bin == 'Liberal')
-results_factorial_con = results_clean_factorial %>% filter(ideology_bin == 'Conservative')
-
-results_factorial_fair = results_clean_factorial %>% filter(grepl('Fairness|Control', arm))
-results_factorial_pure = results_clean_factorial %>% filter(grepl('Purity|Control', arm))
-
-results_factorial_libfair = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
-results_factorial_libpure = results_clean_factorial %>% filter(ideology_bin == 'Liberal' & grepl('Purity|Control', arm))
-results_factorial_confair = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Fairness|Control', arm))
-results_factorial_conpure = results_clean_factorial %>% filter(ideology_bin == 'Conservative' & grepl('Purity|Control', arm))
-
-cross_tab_factorial = results_clean_factorial %>%
-  group_by(liberal, conservative, purity, fairness, base_com, base_ind, extension) %>%
-  summarise(n = n())
-
-# REGRESSION
-factorial_levels_com = custom_lm_calcs(lm_in = lm(ubi_number ~ conservative * purity * fairness * extension
-                                                  , data = results_clean_factorial)
-                                       , clusters_in = NA)
-
-stargazer(factorial_levels_com$lm
-          , se = list(factorial_levels_com$se_robust
-          )
-          , type = stargazer_type, header = F
-          , title            = "All Arms Factorial Specifications"
-          , column.labels    = c("Levels Independent")
-          , dep.var.caption  = "All Arms"
-          , dep.var.labels   = "UBI Ranking"
-          , notes            = "HC Robust Standard Errors"
-          # , report           = ('v*c*sp')
-          , font.size        = "small"
-          , column.sep.width = "1pt"
-          , label            = "tab:factorialmodel"
-          , single.row       = TRUE)
-```
 
 \pagebreak
 
