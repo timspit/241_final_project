@@ -547,15 +547,7 @@ The authors received $500 in financial support from the University of California
 
 In addition, the authors put in $25 out of their own personal income to increase the statistical power of the results and balance the number of subjects between liberals and conservatives.  
 
-\newpage
-## Appendix C: Study Flowchart {-}
-
-```{r flowchart, echo = FALSE, fig.height = 8, fig.width=4.8, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
-flowchart_img = readPNG("images/flowchart.png")
-grid.raster(flowchart_img)
-```
-\newpage
-## Appendix D: Data Dictionary {-}
+## Appendix C: Data Dictionary {-}
 
 | Variable Name | Variable | Values |
 | :---- | :-------- | :-------- | 
@@ -569,7 +561,14 @@ grid.raster(flowchart_img)
 | `purity_q2_repulsed_bin` | Repulsed | 0 (None/A little) or 1 (Any higher reaction) |
 | `purity_q4_relieved_bin` | Relieved | 0 (None/A little) or 1 (Any higher reaction) |
 
-\pagebreak
+\newpage
+## Appendix D: Study Flowchart {-}
+
+```{r flowchart, echo = FALSE, fig.height = 8, fig.width=4.8, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
+flowchart_img = readPNG("images/flowchart.png")
+grid.raster(flowchart_img)
+```
+\newpage
 
 ## Appendix E: Treatment Vignettes {-}
 
