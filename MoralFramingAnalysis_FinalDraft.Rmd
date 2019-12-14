@@ -535,26 +535,27 @@ Many stimuli and targets would need to be tested while controlling for nuances b
  
 \pagebreak
 
-# Appendix  
+# Appendices {-}
 
-## Declaration of Conflicting Interests  
+## Appendix A: Declaration of Conflicting Interests {-}
 
-To the best of their knowledge, the authors have no potential conflicts of interest with respect to the research, distribution of survey, and authorship of this paper.  
+To the best of their knowledge, the authors have no potential conflicts of interest with respect to the research, distribution of survey, and authorship of this paper.
 
-## Funding  
+## Appendix B: Funding {-}
 
 The authors received $500 in financial support from the University of California, Berkeley which was leveraged to pay survey-takers through the Prolific platform and satisfy the statistical power requirements.  
 
 In addition, the authors put in $25 out of their own personal income to increase the statistical power of the results and balance the number of subjects between liberals and conservatives.  
 
-## Study Flowchart  
+\newpage
+## Appendix C: Study Flowchart {-}
 
-```{r flowchart, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
+```{r flowchart, echo = FALSE, fig.height = 8, fig.width=4.8, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
 flowchart_img = readPNG("images/flowchart.png")
 grid.raster(flowchart_img)
 ```
-
-## Data Dictionary
+\newpage
+## Appendix D: Data Dictionary {-}
 
 | Variable Name | Variable | Values |
 | :---- | :-------- | :-------- | 
@@ -570,16 +571,18 @@ grid.raster(flowchart_img)
 
 \pagebreak
 
-## Treatment Vignettes  
+## Appendix E: Treatment Vignettes {-}
 
-### Vignette 1: Purity Manipulation
+### Vignette 1: Purity Manipulation {-}
 
 **Introduction**
+
 In the following task, we want you to read a story about a person’s trip to work.  While you are reading this story, please try to imagine yourself as the person reacting to what you see.  In order to give you enough time to read the selection, the advance button will appear after a few moments.
 
 *****
 
 **Base**
+
 Every day I walk the same path to work. Unfortunately it is the least enjoyable part of my day. It’s just that there are so many of them and it sickens me to see all those people living in filth.
 
 ```{r vignette_purity_images_base, echo = FALSE, fig.show='hold', out.width = "50%", fig.align = "center"}
@@ -593,6 +596,7 @@ knitr::include_graphics("images/vignette_purity_base2.png")
 *****
 
 **Extension**
+
 For the next task, we want you to read the continuation of the story. While reading the story, please remember to try to imagine yourself as the person reacting to what you see.
 
 *****
@@ -611,8 +615,9 @@ A line began to form as the others saw what was happening. An opportunity for a 
 ```{r vignette_purity_image_extension2, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
 knitr::include_graphics("images/vignette_purity_extension2.png")
 ```
-
+\newpage
 ### Vignette 2: Fairness Manipulation
+
 **Introduction**
 
 In the following task, we want you to read a story about a person’s trip to school.  While you are reading this story, please try to imagine yourself as the person reacting to what you see.  In order to give you enough time to read the selection, the advance button will appear after a few moments.
@@ -663,7 +668,7 @@ A few weeks go by, and I am sitting alone in the kitchen with dinner when Mom wa
     *Olivia Davies  Dean of Students*
 
 \newpage
-## Covariate Balance Check
+## Appendix F: Covariate Balance Check {-}
 See table on following page.
 
 ```{r model_arm_cov_balaance, echo=FALSE, paged.print=FALSE, results='asis'}
@@ -713,7 +718,7 @@ stargazer(arm_pur_base$lm
 ```  
 
 \newpage
-## Additional Regression Tables  
+## Appendix G: Additional Regression Tables {-}
 
 ```{r model_arm_prelim, echo = FALSE, results='asis'}
 prelim_model_libfair_prelim = custom_lm_calcs(lm_in = lm(ubi_number ~ arm_level, data = results_armlibfair %>% 
