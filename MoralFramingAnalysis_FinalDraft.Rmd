@@ -4,13 +4,15 @@ subtitle: "W241 Experiments and Causality"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
 date: "December 10, 2019"
 tags: [Moral Foundations, Universal Basic Income, Survey, Experiment]
-abstract: Through this experiment we tested the treatment effect of various presentations of the moral foundations ("the frame") on a person's feelings towards a particular topic.  
+abstract: Through this experiment we tested the treatment effect of various presentations of the moral foundations ("the frame") on a person's feelings towards a particular topic. 
 output:
   pdf_document:
     fig_caption: yes
     number_sections: yes
     toc: no
     latex_engine: xelatex
+    includes:
+      in_header: header.tex
   md_document:
     variant: markdown
   html_document:
@@ -570,17 +572,101 @@ grid.raster(flowchart_img)
 
 ## Treatment Vignettes  
 
-_[[TBD]]_  
+### Vignette 1: Purity Manipulation
 
-```{r vignette_purity_images_base, echo = FALSE, fig.show='hold', out.width = "50%", fig.align = "default"}
-# EXAMPLE of how to include images - rest of the images to be added with text
+**Introduction**
+In the following task, we want you to read a story about a person’s trip to work.  While you are reading this story, please try to imagine yourself as the person reacting to what you see.  In order to give you enough time to read the selection, the advance button will appear after a few moments.
+
+*****
+
+**Base**
+Every day I walk the same path to work. Unfortunately it is the least enjoyable part of my day. It’s just that there are so many of them and it sickens me to see all those people living in filth.
+
+```{r vignette_purity_images_base, echo = FALSE, fig.show='hold', out.width = "50%", fig.align = "center"}
 knitr::include_graphics("images/vignette_purity_base1.png")
+```
+The smell of urine permeates the air as I walk by. I notice the flies buzzing off a half eaten sandwich one of them retrieves from the trash. I try not to stare too long out of fear one of them might notice me. I train my eyes forward and keep moving on. Only a few blocks more until I get to work.
+```{r vignette_purity_image_base2, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
 knitr::include_graphics("images/vignette_purity_base2.png")
 ```
 
-## Covariate Balance Check
+*****
 
-```{r model_arm_cov_balaance, echo = FALSE, results='asis'}
+**Extension**
+For the next task, we want you to read the continuation of the story. While reading the story, please remember to try to imagine yourself as the person reacting to what you see.
+
+*****
+
+It was then that I noticed a person up the street. A well-groomed man with clippers in his hand. He had with him a chair, a sponge, several buckets of clean water and lots of hygiene supplies.
+
+He drew a cape around one of the vagrants as he sat the man onto the chair. The barber applied a sudsy lather to the man’s face. He shaved and cleansed the man. Then, he proceeded to cut the man's hair. He combed through the tangles as he clipped, and he clipped as he combed, and then, as if by miracle, a sharp-looking citizen began to appear.
+
+```{r vignette_purity_image_extension1, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
+knitr::include_graphics("images/vignette_purity_extension1.png")
+```
+The benevolent barber finished his work. He applied a clean gel to the hair and a refreshing lotion to the face. Then he presented the man his mobile device to see what he had become. There he was, a transformed gentleman smiling at his pure likeness with joy in his eyes. And when his eyes caught my own gaze I found myself smiling at him, too. 
+
+A line began to form as the others saw what was happening. An opportunity for a new start.
+
+```{r vignette_purity_image_extension2, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
+knitr::include_graphics("images/vignette_purity_extension2.png")
+```
+
+### Vignette 2: Fairness Manipulation
+**Introduction**
+
+In the following task, we want you to read a story about a person’s trip to school.  While you are reading this story, please try to imagine yourself as the person reacting to what you see.  In order to give you enough time to read the selection, the advance button will appear after a few moments.
+
+*****
+
+**Base**
+
+Boy I hate going to school when it gets cold outside. It’s not the cold weather - that part is fine. It’s that everyone brings out their winter coats. Not me though. I put off wearing mine longer than most. Anything to keep from wearing that scratchy old pea coat. My sister's hand-me down. 
+
+My jean jacket looks pretty normal though. Just like everyone else’s. But the fancy coats with labels that say “Canada Goose” and “Moncler” don’t look like what I’ve got at all.  I really hate going to school when it’s cold outside.
+
+```{r vignette_fairness_image_base1, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
+knitr::include_graphics("images/vignette_fairness_base1.png")
+```
+
+I guess I feel like I don’t fit in when I wear my sister's hand-me down. The stares and people pointing. When everyone is in school uniform nobody realizes how poor our family is. I keep it going for a while though. Wearing the jean jacket. But it is getting really cold.
+
+Now it’s December and one day my teacher Mr. Eldrich stops me on my way out the door. “Riley, don’t you have something warmer to wear?”. I can put it off no longer. 
+
+```{r vignette_fairness_image_base2, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
+knitr::include_graphics("images/vignette_fairness_base2.png")
+```
+
+The next day I show up with my old pea coat. And my worst fears come true. All the kids laughed when I walked by, or whispered whenever I was close. They treated me like I wasn’t a person. Like I didn’t belong. I was the same person I was yesterday but no one would sit next to me anymore. No one would choose me to be in their group. I couldn’t wait for class to be over. 
+
+My teacher Mr. Eldrich tried to stop me on my way out the door, but as soon as the bell rang I ran straight home, threw my coat off onto the lawn and burst through the front door in tears.
+
+```{r vignette_fairness_image_base3, echo=FALSE, fig.show='hold', out.width='50%', fig.align='center'}
+knitr::include_graphics("images/vignette_fairness_base3.png")
+```
+
+*****
+**Extension**
+
+For the next task, we want you to read the continuation of the story. While reading the story, please remember to try to imagine yourself as the person reacting to what you see.
+*****
+A few weeks go by, and I am sitting alone in the kitchen with dinner when Mom walks through the door. “Hey, honey!” she said, “I got the oddest email from school today. Something about no longer allowing designer coats at school?” My eyes widened. “Can I see that, Mom?”
+
+*Dear Parents,* 
+
+*In an effort to promote equality among our students, we would like to ask that families refrain from allowing their children to wear designer brands to school. It has come to our attention that the prominence of these items (including Canada Goose, Moncler, and Pyrenex) is engendering an environment of social exclusion for students whose families may not be in a position to purchase such brands. We have also received several notifications from parents regarding repeated requests from their children to purchase these items; Thus we would like to alleviate undue pressure on parents, as well as students.*
+
+*We strive to foster an inclusive learning environment for our students. With this in mind, we appreciate your efforts in complying with this request.*
+  
+  
+  *Sincerely,*
+    *Olivia Davies  Dean of Students*
+
+\newpage
+## Covariate Balance Check
+See table on following page.
+
+```{r model_arm_cov_balaance, echo=FALSE, paged.print=FALSE, results='asis'}
 arm_pur_base = custom_lm_calcs(lm_in = lm(arm=="Purity_Base" ~ age + gender + urban, data = results_clean_lim %>% 
                                                            filter(recruitment_wave %in% c("Wave1"), ideology_bin %in%("Conservative")))#, "Wave2")))
                                               , clusters_in = NA)
@@ -622,9 +708,11 @@ stargazer(arm_pur_base$lm
           , label            = "tab:covbalancecheck"
           , type             = stargazer_type
           , single.row       = TRUE
+          , float.env = "sidewaystable"
 )
 ```  
 
+\newpage
 ## Additional Regression Tables  
 
 ```{r model_arm_prelim, echo = FALSE, results='asis'}
@@ -690,13 +778,15 @@ stargazer(model_control_day$lm
           , font.size        = "small"
           , column.sep.width = "1pt"
           , label            = "tab:wavestratmodel"
+          , float.env = "sidewaystable"
 )
 ```
+
 <!-- NOTES:   -->
 <!-- - Purity Extension to the Conservatives BY ITSELF is significant at to 0.1 level   -->
 <!-- - Day of recuitment/wave not significant across any arms   -->
 <!-- - Therefore, no need to stratify -->
 
-\pagebreak
+\newpage
 
 # References  
