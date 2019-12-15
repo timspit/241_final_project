@@ -312,42 +312,45 @@ Both vignettes are included in the **Appendix E** for reference.
 
 Frames are a somewhat "fuzzy" concept: it can be challenging to design a frame that precisely conveys the intended moral foundation. As such, it was critical to conduct a pilot to confirm that our vignettes were triggering the intended foundation. In the pilot we asked participants to rank the story elements that left the largest impression. Below is an example of the rank sort questions for the fairness/reciprocity frame:
 
-- The will of the narrator to persevere through the cold weather
-- Fear for the narrator's safety
-- Empathy for the narrator's plight
-- Indignation for the narrator's misfortunes
-- The betrayal of friendship from fellow students
-- Respect and admiration for the teacher
+$$\begin{minipage}{0.8\linewidth}
+Thinking back on the images and descriptive language used in the story, 
+please rate the story elements that left you with the largest impression,
+\textbf{with 1 being the highest or most significant impression and 6 being the lowest.}
+\begin{align*}
+\Box & \quad\text{The will of the narrator to persevere through the cold weather} \\
+\Box & \quad\text{Fear for the narrator's safety} \\
+\Box & \quad\text{Empathy for the narrator's plight} \\
+\Box & \quad\text{Indignation for the narrator's misfortunes} \\
+\Box & \quad\text{The betrayal of friendship from fellow students} \\
+\Box & \quad\text{Respect and admiration for the teacher} \\
+\end{align*}
+\end{minipage}$$
 
 In the responses that came back we confirmed that the purity story was primarily triggering the purity foundation. However, for the fairness story, we received scores indicating that the care foundation was being triggered more than the fairness foundation. Since care/harm was also a liberal moral foundation we felt comfortable proceeding with the manipulation, but with the knowledge that we were potentially targeting a different foundation than we originally intended. For complete results of the pilot testing, refer to _\autoref{tab:prelimmodel}_.  
  
 ## Procedure  
 
-As mentioned in the previous section, we developed two treatment options, one for each of the two moral foundations included in our experiment. The survey procedures were designed in Qualtrics, and distribution was handled in Prolific.
+Procedures for the study were implemented in Qualtrics, an online survey design tool for conducting research and evaluations. _\autoref{fig:study_flowchart}_ in **Appendix D** offers a detailed description of the four treatment arms and control arm for the experiment.
 
 In the survey procedures, subjects assigned to treatment would read the base story designed to trigger an emotional reaction born from either the purity/sanctity or fairness/reciprocity foundations. In addition, an equal portion of subjects assigned to treatment were randomly assigned to read the extension to the base story which offered a satisfying conclusion to the moral conflict introduced in the base story. The intended treatment for the extension was to trigger either pro-attitudinal or counter-attitudinal effect from the participant depending on the story and ideology (e.g. persuasion toward the other side or entrenchment for your own side).
 
-We implemented a timer on the treatment pages of the survey requiring participants to stay on the page for at least 15-20 seconds, depending on the length of the frame. This was done to prevent subjects from clicking through the pages without adequate time to read and digest the frame. 
+The treatment pages of the design include a timer which requires participants to stay on the page for fixed amount of time which depended on the story length of the frame. This was done to prevent subjects from clicking through the pages without adequate time to read and digest the frame. 
 
-_\autoref{fig:study_flowchart}_ in **Appendix D** offers a detailed description of the four treatment arms and control arm for the experiment. Participants were randomly assigned to one of the five arms using five-way random sampling without replacement executed within the Qualtrics survey platform. If subjects received treatment, they were asked to rate their feelings about the story they  read and enter some text to describe why they felt the way they did. The feeling check questions would vary depending on the stories read.
+Participants were randomly assigned to one of the five arms using five-way random sampling without replacement executed within the Qualtrics platform. If subjects received treatment, they were asked to rate their feelings about the story they read and enter some text to describe why they felt the way they did. The feeling check questions varied depending on which treatment story was read.
 
-After navigating through treatment or control, the subjects were asked to share their degree of support for the concept of UBI on an eleven point likert scale from zero to ten.
+After navigating through treatment or control, subjects were asked to share their degree of support for the concept of UBI on an eleven point likert scale from zero to ten.
 
-Lastly, participants were asked demographic questions before concluding the survey: age, gender, urbanicity and political orientation. They were also asked if they wished to send a letter to their congressperson if they scored UBI above 7 or less than 3.  
+Last, participants conclude the survey with a deomographic check question on age, gender, urbanicity and political orientation. They were also asked if they wished to send a letter to their congressperson if they scored UBI above 7 or less than 3.  
 
 ## Distribution  
 
-As mentioned previously, distribution was facilitated by Prolific, an online subject recruitment platform.
+Distribution was facilitated by Prolific, an online subject recruitment platform. We determined an online platform was the best available route to gather a sufficient random sample of subjects given time, budget and geographic constraints. By the end of the study we recruited a total sample of **505** adults.
 
-Given the numerous arms of our proposed study, two moral frames with two different endings, plus a control group (more detail provided in Experiment Design: Procedure), we required 150 participants at an absolute minimum. We determined an online platform was the best available route to gather a sufficient random sample of this size given time, budget and geographic constraints. By the end of the study we recruited a total sample size of **505** adults living in the United States using Prolific, an online platform that connects researchers with participants around the world.
-
-We also leveraged Prolific to facilitate blocking which enabled us to obtain an equal distribution of participants who identified as being either politically conservative or politically liberal. This was performed by selecting one of the prescreened characteristics for subjects who indicated their ideological identification within the US Political Spectrum. There is less available research on the moral groundings of political moderates, thus we did not target this group for our experiment. Of note, we did receive 21 moderates in recruitment during the study's demographic check for subjects. We excluded those participants from the analysis.
+Prolific was also leveraged to facilitate blocking, which enabled us to obtain an equal distribution of participants who identified as being either politically conservative or politically liberal. This was performed by selecting one of the prescreened characteristics for subjects who indicated their ideological identification within the US Political Spectrum. There is less available research on the moral groundings of political moderates, thus we did not target this group for our experiment. Of note, we did receive 21 moderates in recruitment during the study's demographic check for subjects. We excluded those participants from the analysis.
 
 Of the subjects who participated in the study, all but three from the conservative block and one from the liberal block completed all tasks in the study. Those who did not complete all tasks were automatically replaced by Prolific. Each participant received \$0.70 as compensation for participating in the study, and Prolific received \$0.30 per participant.
 
 The resulting subject pool comprised of **281** conservatives and **203** liberals across different age groups, gender and urbanity. Of the conservative subjects, 123 (43.8%) identified as female, while 158 (56.2%) identified as male. For the liberal subjects, 91 (44.8%) identified as female, and 112 (55.2%) identified as male. While the 55/45 split does not represent the population in general, the distribution of males and females between the two ideological groups for the study were on balance with one another.
-
-Distribution was completed in waves. Overall, there were 4 waves for conservatives and 2 waves for liberals. _\autoref{tab:waves_table}_ in **Appendix D** offers a detailed description of the waves of participants collected.  
 
 ```{r exploratory_demographics, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
 
@@ -397,6 +400,45 @@ grid.arrange(plot_ideology, plot_gender
              , nrow = 2)
 ```
 
+
+Distribution was completed in waves. Overall, there were 4 waves for conservatives and 2 waves for liberals. _\autoref{tab:distribution_by_wave}_  offers a detailed description of the waves of participants collected.
+
+```{r distribution_by_wave, echo = FALSE, results='asis'}
+
+my_results <- data.table(results_clean)
+my_results <- my_results[,.(N=.N), keyby=.(recruitment_wave, recruitment_day, arm_story, ideology_bin, gender)]
+my_results <- my_results[, story := case_when(recruitment_wave == 'Wave1' ~ "All",
+                                             recruitment_wave=='Wave2' ~ 'Control Only',
+                                             recruitment_wave=='Wave3' ~ 'Purity + Control',
+                                             recruitment_wave=='Wave4' ~ 'Purity + Control.',
+                                             recruitment_wave=='Wave5' & arm_story=='Fairness' ~ "All",
+                                             recruitment_wave=='Wave5' & ideology_bin=='Liberal' ~ "All",
+                                             recruitment_wave=='Wave5' & (arm_story == 'Purity' | arm_story == 'Control') ~ "Purity + Control",
+                                             TRUE ~ as.character(arm_story)),]
+my_results <- my_results[, ideology2 := case_when(recruitment_wave == 'Wave3' & ideology_bin == 'Conservative' ~ "Conservative.",
+                                             TRUE ~ as.character(ideology_bin)),]
+
+
+my_results <- my_results[, .("Participants" = sum(N)), keyby=.("Wave"=recruitment_wave,"Day of Week"=recruitment_day,"Story Frame"=story, "Ideology"=ideology2, "Gender"=gender)]
+
+kbl<-kable(my_results, align = "c", caption="Study Waves") %>%
+  kable_styling(full_width =F) %>%
+  column_spec(1, bold = T) %>% 
+  collapse_rows(columns = 1:4, valign = "top")
+
+kbl
+```
+
+\newpage
+
+## Modifications  
+
+Limitations on funding was a constraint on the experiment. As such, recruitment took place over several days, or waves, to perform checks and make potential modifications along the way. At first, an initial wave of 100 conservative and 100 liberal participants were recruited to provide confirmation on directionality of treatment effect and served to verify the randomization methods from Prolific through covariate balance checking (see _\autoref{tab:covbalancecheck}_ in **Appendix F**).
+
+In this wave we confirmed directionality, determined if there was strength to any of our treatments, and found out whether our treatment was uniform across covariates.  It was during this analysis that we observed a noticeably large treatment effect from conservative women. But we  also had an imbalance where only 4 women participated in the conservative control group, and could not say whether the treatment effect was meaningful. Thus, we launched a secondary wave of 9 conservative women in control to understand if we had a true effect. We sought confirmation of the treatment effect against a more representative sample of conservative women, and did indeed see a variation there. Conservative women started out lower than conservative men.
+
+
+
 ```{r exploratory_reactions, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
 results_response = results_clean_lim %>%
   mutate("See myself" = case_when(arm_story == "Purity" ~ purity_q1_self, TRUE ~ fairness_q1_self)
@@ -423,14 +465,6 @@ ggplot(data = results_response
   theme(axis.text.x = element_text(angle = 45, hjust = 1)
         , legend.position = "none")
 ```
-
-\newpage
-
-## Modifications  
-
-Limitations on funding was a constraint on the experiment. As such, recruitment took place over several days, or waves, to perform checks and make potential modifications along the way. At first, an initial wave of 100 conservative and 100 liberal participants were recruited to provide confirmation on directionality of treatment effect and served to verify the randomization methods from Prolific through covariate balance checking (see _\autoref{tab:covbalancecheck}_ in **Appendix F**).
-
-In this wave we confirmed directionality, determined if there was strength to any of our treatments, and found out whether our treatment was uniform across covariates.  It was during this analysis that we observed a noticeably large treatment effect from conservative women. But we  also had an imbalance where only 4 women participated in the conservative control group, and could not say whether the treatment effect was meaningful. Thus, we launched a secondary wave of 9 conservative women in control to understand if we had a true effect. We sought confirmation of the treatment effect against a more representative sample of conservative women, and did indeed see a variation there. Conservative women started out lower than conservative men.
 
 After completing waves 1 and 2 we were able to confirm directionality, strength, and covariate balances. We also noted the range of our standard errors and saw the need to focus on one arm and one group to generate enough statistical power. With sufficient funds we would have liked to collect enough participants to supply sufficient power to each arm of the study. However funding was a constraint, thus, we dedicated our remaining resources to one of the treatment arms to increase the probability of observing a statistically significant effect.  
 
@@ -597,35 +631,6 @@ grid.raster(flowchart_img)
 
 \newpage
 
-\label{tab:waves_table} Study Waves
-
-```{r distribution_by_wave, echo = FALSE, results='asis'}
-
-my_results <- data.table(results_clean)
-my_results <- my_results[,.(N=.N), keyby=.(recruitment_wave, recruitment_day, arm_story, ideology_bin, gender)]
-my_results <- my_results[, story := case_when(recruitment_wave == 'Wave1' ~ "All",
-                                             recruitment_wave=='Wave2' ~ 'Control Only',
-                                             recruitment_wave=='Wave3' ~ 'Purity + Control',
-                                             recruitment_wave=='Wave4' ~ 'Purity + Control.',
-                                             recruitment_wave=='Wave5' & arm_story=='Fairness' ~ "All",
-                                             recruitment_wave=='Wave5' & ideology_bin=='Liberal' ~ "All",
-                                             recruitment_wave=='Wave5' & (arm_story == 'Purity' | arm_story == 'Control') ~ "Purity + Control",
-                                             TRUE ~ as.character(arm_story)),]
-my_results <- my_results[, ideology2 := case_when(recruitment_wave == 'Wave3' & ideology_bin == 'Conservative' ~ "Conservative.",
-                                             TRUE ~ as.character(ideology_bin)),]
-
-
-my_results <- my_results[, .("Participants" = sum(N)), keyby=.("Wave"=recruitment_wave,"Day of Week"=recruitment_day,"Story Frame"=story, "Ideology"=ideology2, "Gender"=gender)]
-
-kbl<-kable(my_results, align = "c") %>%
-  kable_styling(full_width =F) %>%
-  column_spec(1, bold = T) %>% 
-  collapse_rows(columns = 1:4, valign = "top")
-
-kbl
-```
-
-\newpage
 
 ## Appendix E: Treatment Vignettes {-}
 
