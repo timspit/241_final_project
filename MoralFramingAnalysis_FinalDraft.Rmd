@@ -30,7 +30,8 @@ packages = c('openxlsx'
              , 'lmtest', 'sandwich', 'car', 'survey'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
              , 'knitr', 'webshot'
-             , 'png', 'grid')
+             , 'png', 'grid'
+             , 'kableExtra')
 packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
@@ -204,7 +205,14 @@ results_full = results_full_dedup  %>%
                                     , recruitday == "SU" ~ "Wave3"
                                     , recruitday == "M" ~ "Wave4"
                                     , recruitday == "T2" ~ "Wave5"
-                                    , TRUE ~ "unknown") %>% factor(levels = recruit_wave_levels)  
+                                    , TRUE ~ "unknown") %>% factor(levels = recruit_wave_levels)
+         , recruitment_day = case_when(is.na(recruitday) ~ "missing"
+                                    , recruitday == "T1" ~ "Tuesday"
+                                    , recruitday == "F" ~ "Friday"
+                                    , recruitday == "SU" ~ "Sunday"
+                                    , recruitday == "M" ~ "Monday"
+                                    , recruitday == "T2" ~ "Tuesday"
+                                    , TRUE ~ "unknown") 
   )
 # Clean = limit to the variables we need
 results_clean = results_full %>%
@@ -214,7 +222,7 @@ results_clean = results_full %>%
          , fairness_q1_self, fairness_q2_pain, fairness_q3_injustice, fairness_q4_relieved
          , purity_q2_repulsed_bin, purity_q4_relieved_bin, fairness_q2_pain_bin, fairness_q4_relieved_bin
          , open_text_reaction
-         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitday, recruitment_wave)
+         , ubi_number, ubi_group, ubi_familiarity, ubi_familiarity_bin, recruitday, recruitment_wave, recruitment_day)
 
 # Arm-specific datasets
 results_armlibfair = results_clean %>% filter(ideology_bin == 'Liberal' & grepl('Fairness|Control', arm))
@@ -792,5 +800,37 @@ stargazer(model_control_day$lm
 <!-- - Therefore, no need to stratify -->
 
 \newpage
+
+
+```{r distribution_by_wave, echo = FALSE, results='asis'}
+
+my_results <- data.table(results_clean)
+my_results <- my_results[,.(N=.N), keyby=.(recruitment_wave, recruitment_day, arm_story, ideology_bin, gender)]
+my_results <- my_results[, story := case_when(recruitment_wave == 'Wave1' ~ "All",
+                                             recruitment_wave=='Wave2' ~ 'Control Only',
+                                             recruitment_wave=='Wave3' ~ 'Purity + Control',
+                                             recruitment_wave=='Wave4' ~ 'Purity + Control.',
+                                             recruitment_wave=='Wave5' & arm_story=='Fairness' ~ "All",
+                                             recruitment_wave=='Wave5' & ideology_bin=='Liberal' ~ "All",
+                                             recruitment_wave=='Wave5' & (arm_story == 'Purity' | arm_story == 'Control') ~ "Purity + Control",
+                                             TRUE ~ as.character(arm_story)),]
+my_results <- my_results[, ideology2 := case_when(recruitment_wave == 'Wave3' & ideology_bin == 'Conservative' ~ "Conservative.",
+                                             TRUE ~ as.character(ideology_bin)),]
+
+
+my_results <- my_results[, .("Participants" = sum(N)), keyby=.("Wave"=recruitment_wave,"Day of Week"=recruitment_day,"Story Frame"=story, "Ideology"=ideology2, "Gender"=gender)]
+
+
+#my_results <- data.frame(my_results)
+
+kbl<-kable(my_results, align = "c") %>%
+  kable_styling(full_width =F) %>%
+  column_spec(1, bold = T) %>% 
+  collapse_rows(columns = 1:4, valign = "top")
+
+kbl
+
+  
+```
 
 # References  
