@@ -4,7 +4,7 @@ subtitle: "W241 Experiments and Causality"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
 date: "December 10, 2019"
 tags: [Moral Foundations, Universal Basic Income, Survey, Experiment]
-abstract: People make spontaneous decisions every day based on their moral foundations or pillars. We examine whether the political attitudes of liberals and conservatives can be influenced on the issue of Universal Basic Income (UBI). Through this experiment we manipulated two foundations- purity/sanctity and fairness/reciprocity through the use of descriptive and visual storytelling, introduce a treatment or extension to the base story, and observe their outcomes. We observed that framing issues using moral foundations may change political attitudes. In line with the initial hypothesis, conservative subjects were more amenable to a social program like the UBI after being exposed to the treatment. However there are several challenges to generalizing this finding that this paper will go into in the following sections. 
+abstract: Moral foundation theory is a topic of continued interest in research within the political science community. The framework intends to explain variations of human moral reasoning through five innate qualities, or foundations, which are commonly linked to political ideology. Those leaning to the left are mostly guided by foundations that include harm/care and fairness/reciprocity, while those leaning right favor the ingroup/loyalty, authority/respect, and purity/sanctity foundations. In this study we hypothesize that framing a topic through moral-based instruments can influence the political attitudes of liberal and conservative groups. Here, we introduce a short vignette to treated subjects before asking their assesssment on Universal Basic Income. The vignettes trigger positive and negative reactions born from the purity/sanctity and fairness/reciprocity foundations. Our study concludes with an observable effect from the purity/sanctity treatment on conservative groups. Lacking sufficient funds for our study to continue, the effect from the fairness/reciprocity treatment on liberal groups remains inconclusive.
 output:
   pdf_document:
     fig_caption: yes
@@ -31,10 +31,12 @@ packages = c('openxlsx'
              , 'gridExtra', 'stargazer', 'cowplot', 'corrplot'
              , 'knitr', 'webshot'
              , 'png', 'grid'
-             , 'kableExtra')
+             , 'kableExtra', 'magick')
 packages_needed = packages[!packages %in% installed.packages()]
 if(length(packages_needed) > 0) install.packages(packages_needed)
 lapply(packages, library, character.only = TRUE)
+
+webshot::install_phantomjs() # Needed to save the kable as a png
 
 stargazer_type = "latex" #"latex" # change to latex when ready to knit
 options(tinytex.verbose = TRUE)
@@ -289,7 +291,9 @@ To provide a continuation on these bodies of work and build on their conclusions
 
 Similar to the Aaroe, et al. study, we hypothesize that manipulating the purity/sanctity foundation by triggering a disgust response will create a pro-attitudinal or entrenching effect where conservative subjects rate their UBI favorability *similar to or lower than* the control group score. We further hypothesize that the second act of the story where the disgust response is remedied will result in a counter-attitudinal or persuasion effect where conservative subjects rate their UBI favorability *higher* than when compared to control. We hypothesize that the outcome from the persuasion effect is that the proposal of UBI is more agreeable because issues like the one from the story show that outside help is needed in order to be resolved and because the disgust threat has been removed.
 
-For the fairness/reciprocity foundation we hypothesize that triggering an "unjust" response will create a pro-attitudinal or entrenching effect for liberal subjects causing them to want to rectify the situation and will rate their UBI favorability *higher* than control. However, when the unjust situation is remedied in the second act of the story we hypothesize the treatment will result in a counter-attitudinal or persuasion effect where the score is *similar to or lower than* the control group score. We hypothesize that the outcome from the persuasion effect is that there is less of a need for a UBI solution because issues like the one from the story show they can be resolved on their own and because the injustice threat has been removed.  
+For the fairness/reciprocity foundation we hypothesize that triggering an "unjust" response will create a pro-attitudinal or entrenching effect for liberal subjects causing them to want to rectify the situation and will rate their UBI favorability *higher* than control. However, when the unjust situation is remedied in the second act of the story we hypothesize the treatment will result in a counter-attitudinal or persuasion effect where the score is *similar to or lower than* the control group score. We hypothesize that the outcome from the persuasion effect is that there is less of a need for a UBI solution because issues like the one from the story show they can be resolved on their own and because the injustice threat has been removed.
+
+_\autoref{fig:hypothesis_matrix_chunk}_ is a summary of our treatment hypothesis.
 
 ```{r hypothesis_matrix_chunk, echo = FALSE, fig.height = 2, fig.width=4.8, fig.align="center", fig.cap="\\label{fig:hypothesis_matrix} Hypothesis Matrix"}
 hypothesis_matrix_img = readPNG("images/hypothesis_matrix.png")
@@ -298,17 +302,17 @@ grid.raster(hypothesis_matrix_img)
 
 ## Treatment  
 
-To test our hypothesis, we designed two emotion-evoking vignettes to serve as frames for our experiment. A "frame" is a social science concept that involves the transferring of information through literary or visual form to the human consciousness. _@Entman1993 _ Frames help us understand how we should receive and interpret information.  
+To test our hypothesis, two emotion-evoking vignettes were designed to serve as frames for our experiment. A "frame" is a social science concept that involves the transferring of information through literary or visual form to the human consciousness. _@Entman1993 _ Frames help us understand how we should receive and interpret information.  
 
-Vignettes were written in two parts, with each part having one or more accompanying images to reinforce the narration. In each vignette, the reader is introduced  to a stressful encounter designed to induce an emotional response born from one of the intended moral foundations, particularly if the subject has a high association with the foundation. Then, in the second half of the story the effects from the encounter are "undone" by including a satisfying remedy designed to treat the same subjects that have high affinity with the foundation.
+Vignettes consist of two parts, with each part having one or more accompanying images to reinforce the narration. In each vignette, the reader is introduced  to a stressful encounter designed to induce an emotional response born from one of the intended moral foundations, particularly if the subject has a high association with the foundation. Then, in the second half of the story the effects from the encounter are "undone" by including a satisfying remedy designed to treat the same subjects that have high affinity with the foundation.
 
-The first part of the story, or act one, in each vignette is what we refer to as the **base** story. We refer to the second act as its **extension**. Some subjects only received the base story. Others received both the base and the extension. Others, in the control group, received no story at all. Our hypothesis is to test the frame effects from the purity/sanctity and fairness/reciprocity foundations. As such, we designed two vignettes for these purposes.  
+The first part of the story, or act one of each vignette is what we refer to as the **base** story. We refer to the second act as its **extension**. Some subjects only receive the base story. Others receive both the base and the extension. Others, in the control group, receive no story at all. Our hypothesis is to test the frame effects from the purity/sanctity and fairness/reciprocity foundations. As such, we designed two vignettes for these purposes.  
 
 For the purity/sanctity frame, we wrote a story about a narrator's encounter with the filthy living conditions of homeless people during a morning walk to work. While the first part was intended to leave the reader with a feeling of disgust, the second half  had a positive remedy. In the extension scenario, a barber enters the scene and begins to provide grooming services to clean the homeless people. 
 
 The fairness/reciprocity frame involved a school-age girl in the winter who was afraid of being ostracized by her schoolmates for wearing a hand-me-down winter coat to school because all the other students had expensive designer-brand jackets. Her family couldn't afford a modern jacket. When the winter grew colder she was forced to bring her coat to school and was bullied and ostracized for it. The second half of the story involved the family getting a letter declaration from the school that students would no longer be permitted to wear expensive branded jackets going forward, relieving the girl of this peer pressure.  
 
-Both vignettes are included in the **Appendix E** for reference. 
+Both vignettes are included in **Appendix E** for reference. 
 
 Frames are a somewhat "fuzzy" concept: it can be challenging to design a frame that precisely conveys the intended moral foundation. As such, it was critical to conduct a pilot to confirm that our vignettes were triggering the intended foundation. In the pilot we asked participants to rank the story elements that left the largest impression. Below is an example of the rank sort questions for the fairness/reciprocity frame:
 
@@ -326,7 +330,7 @@ please rate the story elements that left you with the largest impression,
 \end{align*}
 \end{minipage}$$
 
-In the responses that came back we confirmed that the purity story was primarily triggering the purity foundation. However, for the fairness story, we received scores indicating that the care foundation was being triggered more than the fairness foundation. Since care/harm was also a liberal moral foundation we felt comfortable proceeding with the manipulation, but with the knowledge that we were potentially targeting a different foundation than we originally intended. For complete results of the pilot testing, refer to _\autoref{tab:prelimmodel}_.  
+The pilot responses confirmed that the purity story was primarily triggering the purity foundation. However, for the fairness story, we received scores indicating that the care foundation may be triggered more than the fairness foundation. Since care/harm was also a liberal moral foundation we felt comfortable proceeding with the manipulation, but with the knowledge that we were potentially targeting a different foundation than we originally intended. 
  
 ## Procedure  
 
@@ -340,19 +344,19 @@ Participants were randomly assigned to one of the five arms using five-way rando
 
 After navigating through treatment or control, subjects were asked to share their degree of support for the concept of UBI on an eleven point likert scale from zero to ten.
 
-Last, participants conclude the survey with a deomographic check question on age, gender, urbanicity and political orientation. They were also asked if they wished to send a letter to their congressperson if they scored UBI above 7 or less than 3.  
+Last, participants conclude the survey with a demographic check question on age, gender, urban/rural classification and political orientation. They were also asked if they had prior knowledge of UBI and whether they wished to send a letter to their congressperson (if they scored UBI above 7 or less than 3).  
 
 ## Distribution  
 
-Distribution was facilitated by Prolific, an online subject recruitment platform. We determined an online platform was the best available route to gather a sufficient random sample of subjects given time, budget and geographic constraints. By the end of the study we recruited a total sample of **505** adults.
+Distribution of the survey to random subjects was facilitated by Prolific, an online study recruitment platform. We determined an online platform was the best available route to gather a sufficient random sample of subjects given time, budget and geographic constraints. By the end of the study we recruited a total sample of **505** adults.
 
 Prolific was also leveraged to facilitate blocking, which enabled us to obtain an equal distribution of participants who identified as being either politically conservative or politically liberal. This was performed by selecting one of the prescreened characteristics for subjects who indicated their ideological identification within the US Political Spectrum. There is less available research on the moral groundings of political moderates, thus we did not target this group for our experiment. Of note, we did receive 21 moderates in recruitment during the study's demographic check for subjects. We excluded those participants from the analysis.
 
 Of the subjects who participated in the study, all but three from the conservative block and one from the liberal block completed all tasks in the study. Those who did not complete all tasks were automatically replaced by Prolific. Each participant received \$0.70 as compensation for participating in the study, and Prolific received \$0.30 per participant.
 
-The resulting subject pool comprised of **281** conservatives and **203** liberals across different age groups, gender and urbanity. Of the conservative subjects, 123 (43.8%) identified as female, while 158 (56.2%) identified as male. For the liberal subjects, 91 (44.8%) identified as female, and 112 (55.2%) identified as male. While the 55/45 split does not represent the population in general, the distribution of males and females between the two ideological groups for the study were on balance with one another.
+The resulting subject pool comprised of **281** conservatives and **203** liberals across different age groups, gender and urbanity. Of the conservative subjects, 123 (43.8%) identified as female, while 158 (56.2%) identified as male. For the liberal subjects, 91 (44.8%) identified as female, and 112 (55.2%) identified as male. While the 55/45 split does not represent the population in general, the distribution of males and females between the two ideological groups for the study were on balance with one another. See _\autoref{fig:exploratory_demographics}_ for more details.
 
-```{r exploratory_demographics, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Demographics"}
+```{r exploratory_demographics, echo = FALSE, fig.height = 5.6, fig.width = 6, fig.align="center", fig.cap="Demographics"}
 
 # Ideology
 plot_ideology = ggplot() +
@@ -362,7 +366,7 @@ plot_ideology = ggplot() +
   scale_fill_brewer(type = "div", palette = 5, direction = -1, aesthetics = "fill") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 8))
+  theme(legend.position = "left", axis.text.x=element_blank(), legend.text=element_text(size = 6.5))
 
 # Backbone ggplot object
 grpstackbar_plot = ggplot() +
@@ -395,13 +399,19 @@ plot_familiarity = grpstackbar_plot +
        , aes(x = `UBI Familiarity`, y = Count, fill = Ideology), stat="identity", show.legend = FALSE)
 
 # PLOT
-grid.arrange(plot_ideology, plot_gender
-             , plot_age, plot_familiarity
-             , nrow = 2)
+#grid.arrange(plot_ideology, plot_gender
+#             , plot_age, plot_familiarity
+#             , ncol = 2)
+
+# fix the sizes draw_plot
+#ggsave("images/exploratory_demographics.png", 
+(fixed_gridplot <- ggdraw() + 
+           draw_plot(plot_ideology,    x=0.04, y=0.75,  width=0.45, height = 0.22) +
+           draw_plot(plot_gender,      x=0.55, y=0.75,  width=0.40, height = 0.25) +
+           draw_plot(plot_age,         x=0.25, y=0.4,   width=0.70, height = 0.35) + 
+           draw_plot(plot_familiarity, x=0.25, y=0,     width=0.70, height = 0.40))#)
 ```
-
-
-Distribution was completed in waves. Overall, there were 4 waves for conservatives and 2 waves for liberals. _\autoref{tab:distribution_by_wave}_  offers a detailed description of the waves of participants collected.
+\newpage
 
 ```{r distribution_by_wave, echo = FALSE, results='asis'}
 
@@ -421,13 +431,17 @@ my_results <- my_results[, ideology2 := case_when(recruitment_wave == 'Wave3' & 
 
 my_results <- my_results[, .("Participants" = sum(N)), keyby=.("Wave"=recruitment_wave,"Day of Week"=recruitment_day,"Story Frame"=story, "Ideology"=ideology2, "Gender"=gender)]
 
-kbl<-kable(my_results, align = "c", caption="Study Waves") %>%
+kbl<-kable(my_results, align = "c", caption="Distribution by Wave") %>%
   kable_styling(full_width =F) %>%
   column_spec(1, bold = T) %>% 
   collapse_rows(columns = 1:4, valign = "top")
 
 kbl
+#%>% save_kable(file="images/distribution_by_wave.png")
 ```
+
+Distribution was completed in waves. Overall, there were 4 waves for conservatives and 2 waves for liberals. _\autoref{tab:distribution_by_wave}_  offers a detailed description of the waves of participants collected.
+
 
 \newpage
 
@@ -435,11 +449,26 @@ kbl
 
 Limitations on funding was a constraint on the experiment. As such, recruitment took place over several days, or waves, to perform checks and make potential modifications along the way. At first, an initial wave of 100 conservative and 100 liberal participants were recruited to provide confirmation on directionality of treatment effect and served to verify the randomization methods from Prolific through covariate balance checking (see _\autoref{tab:covbalancecheck}_ in **Appendix F**).
 
-In this wave we confirmed directionality, determined if there was strength to any of our treatments, and found out whether our treatment was uniform across covariates.  It was during this analysis that we observed a noticeably large treatment effect from conservative women. But we  also had an imbalance where only 4 women participated in the conservative control group, and could not say whether the treatment effect was meaningful. Thus, we launched a secondary wave of 9 conservative women in control to understand if we had a true effect. We sought confirmation of the treatment effect against a more representative sample of conservative women, and did indeed see a variation there. Conservative women started out lower than conservative men.
+In this wave we confirmed directionality, determined if there was strength to any of our treatments, and found out whether our treatment was uniform across covariates.  It was during this analysis that we observed a noticeably large treatment effect from conservative women. But we  also had an imbalance where only 4 women participated in the conservative control group, and could not say whether the treatment effect was meaningful. Thus, we launched a secondary wave of 9 conservative women in control to understand if we had a true effect. We sought confirmation of the treatment effect against a more representative sample of conservative women, and did indeed see a variation there. Conservative women started out lower than conservative men. For complete results of the first two waves, refer to _\autoref{tab:prelimmodel}_. 
 
 
+After confirming directionality, strength, and covariate balances we also noted the range of our standard errors and saw the need to focus on one arm and one group to generate enough statistical power. With sufficient funds we would have liked to collect enough participants to supply sufficient power for each arm of the study. However funding was a constraint, thus, we dedicated our remaining resources to one treatment arm to increase the probability of observing a statistically significant effect.  
 
-```{r exploratory_reactions, echo = FALSE, fig.height = 8, fig.width = 8, fig.align="center", fig.cap="Reactions"}
+We chose to focus on the purity manipulation frame from the conservative group. Our reasons were twofold: 1) the intended manipulation of the disgust response was unambiguous from information we learned in the pilot, and  2) we understood  that the conservative group was already conditioned to rate the UBI favorability score lower, thus, we would learn more about our treatment effect on a topic that is already unfavorable with the ideology.  
+
+Waves 3, 4 and 5 are the result of the decision to focus on the purity manipulation for conservatives.  It was not until wave 5 that we also opened up the survey to additional arms and the liberal side again.  
+
+We also noted the manner in which we were collecting data (across waves) and possible impact from the time of day or day of the week effects. Perhaps during the work week a subject is more apathetic than usual and might choose to rate UBI lower than he or she would have on a Sunday. To account for the nature of stratified responses we detailed an analysis that includes wave effects. The result of that analysis can be found in _\autoref{tab:wavestratmodel}_ in **Appendix G**. Upon analysis we found that the waves did not have a meaningful effect and as such moved forward with analyzing the pooled data.
+
+# Analysis of Results  
+
+## Data
+
+One of the questions asked immediately after subjects complete the vignettes is a feeling check on what they just read. We ask them how repulsed they were for the purity story and how much pain they felt for the girl in the fairness story. If they read the conclusion to either story, they were asked about their sense of relief.
+
+_\autoref{fig:exploratory_reactions}_ presents a heat map of the mean responses to our prompt organized by Base and Extension for each of the frames, and then by ideology. Here we see a high degree of relief from the subjects when they read the extension. This is especially prominent in the purity frame. We also notice that the 'memory' of repulsion dissipates after subjects read the extension treatment.
+
+```{r exploratory_reactions, echo = FALSE, fig.height = 6, fig.width = 6, fig.align="center", fig.cap="Reactions"}
 results_response = results_clean_lim %>%
   mutate("See myself" = case_when(arm_story == "Purity" ~ purity_q1_self, TRUE ~ fairness_q1_self)
          , "Felt repulsed/pain" = case_when(arm_story == "Purity" ~ purity_q2_repulsed, TRUE ~ fairness_q2_pain) 
@@ -465,22 +494,7 @@ ggplot(data = results_response
   theme(axis.text.x = element_text(angle = 45, hjust = 1)
         , legend.position = "none")
 ```
-
-After completing waves 1 and 2 we were able to confirm directionality, strength, and covariate balances. We also noted the range of our standard errors and saw the need to focus on one arm and one group to generate enough statistical power. With sufficient funds we would have liked to collect enough participants to supply sufficient power to each arm of the study. However funding was a constraint, thus, we dedicated our remaining resources to one of the treatment arms to increase the probability of observing a statistically significant effect.  
-
-We chose to focus on the purity manipulation frame from the conservative group. Our reasons were twofold: 1) the intended manipulation of the disgust response was unambiguous from information we learned in the pilot, and  2) we understood  that the conservative group was already conditioned to rate the UBI favorability score lower, thus, we would learn more about our treatment effect on a topic that is already unfavorable with the ideology.  
-
-Waves 3, 4 and 5 are the result of the decision to focus on the purity manipulation for conservatives.  It was not until wave 5 that we also opened up the survey to additional arms and the liberal side again.  
-
-We also noted the manner in which we were collecting data (across waves) and possible impact from the time of day or day of the week effects. Perhaps during the work week a subject is more apathetic than usual and might choose to rate UBI lower than he or she would have on a Sunday. To account for the nature of stratified responses we detailed an analysis that included wave effects. The result of this analysis can be found in _\autoref{tab:wavestratmodel}_ in **Appendix G**.    
-
-# Analysis of Results  
-
-## Data  
-
-Given our "waves" approach to data collection, we wanted to ensure the wave/day blocking did not introduce an effect on our results, such as weekdays, weekends, or time of day affecting baseline opinions of UBI. \autoref{tab:wavestratmodel} in **Appendix G** further details this test.  We found that the waves did not have a meaningful effect and as such moved forward with analyzing the pooled data.  
-
-\newpage 
+\newpage
 
 ## Models  
 
@@ -512,7 +526,7 @@ stargazer(model_libfair$lm, model_libpure$lm
 )
 ```
 
-_\autoref{tab:allarmsmodel})_ presents the results of all treatments collected. Note that while our survey design included an approach to test all combinations of political ideology (`ideology`; liberal/conservative), moral foundation (`arm_story`; purity/fairness), and directionality (`arm_level`; base/extension) we did not hypothesize that a factorial design would be appropriate and therefore did not test the treatments as such. Instead, we hypothesized that specific moral foundations would resonate differently among participants of different ideologies, and therefore tested the effect of changes in directionality (`ubi_number ~ arm_level`) within each of the four arms (comprised of combinations of ideology and moral foundation).  
+_\autoref{tab:allarmsmodel}_ presents the results of all treatments collected. Note that while our survey design included an approach to test all combinations of political ideology (`ideology`; liberal/conservative), moral foundation (`arm_story`; purity/fairness), and directionality (`arm_level`; base/extension) we did not hypothesize that a factorial design would be appropriate and therefore did not test the treatments as such. Instead, we hypothesized that specific moral foundations would resonate differently among participants of different ideologies, and therefore tested the effect of changes in directionality (`ubi_number ~ arm_level`) within each of the four arms (comprised of combinations of ideology and moral foundation).  
 
 The results demonstrate that the extension of the Purity foundation story, when shown to the Conservative participants, may positively affect participant opinions of UBI. This finding fits our prior expectation, which motivated us to focus on this arm as we gathered additional data. The Conservative participants had both a lower baseline opinion of UBI (`r round(model_conpure$lm$coefficients["(Intercept)"],2)`), which means that upward influence was possible, and the Purity story was expected to resonate the most with Conservatives (according to prior research). Therefore, the Extension (counter-attitudinal) treatment of the Purity story would logically leave Conservatives who would otherwise, on average, perhaps be skeptical of UBI, feeling optimistic and focused on purity - making them more amenable to social programs.  
 
@@ -600,9 +614,9 @@ To the best of their knowledge, the authors have no potential conflicts of inter
 
 ## Appendix B: Funding {-}
 
-The authors received $500 in financial support from the University of California, Berkeley which was leveraged to pay survey-takers through the Prolific platform and satisfy the statistical power requirements.  
+The authors received $500 in financial support from the University of California, Berkeley which was used to pay survey-takers through the Prolific platform and satisfy the statistical power requirements.  
 
-In addition, the authors put in $25 out of their own personal income to increase the statistical power of the results and balance the number of subjects between liberals and conservatives.  
+In addition, the authors contributed an additional $25 in personal expenses to observe potential effects within the liberal group. The authors did not continue making further expenditures due to the investment needed to further develop this side of the experiment.  
 
 ## Appendix C: Data Dictionary {-}
 
@@ -750,7 +764,7 @@ stargazer(arm_pur_base$lm
                       , arm_fair_ext$se_robust
                       , arm_control$se_robust)
           , header           = F
-          , title            = "Preliminary Model - Covarience Check by Arm (Waves 1-2 only)"
+          , title            = "Preliminary Model - Covariance Check by Arm (Waves 1-2 only)"
           , dep.var.caption  = "Four Study Arms"
           , dep.var.labels   = c("Pure Base", "Pure Ext", "Fair Base", "Fair Ext", "Control")
           , notes            = c("HC Robust Standard Errors"
