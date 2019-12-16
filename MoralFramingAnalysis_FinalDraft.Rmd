@@ -399,17 +399,15 @@ plot_familiarity = grpstackbar_plot +
        , aes(x = `UBI Familiarity`, y = Count, fill = Ideology), stat="identity", show.legend = FALSE)
 
 # PLOT
-#grid.arrange(plot_ideology, plot_gender
-#             , plot_age, plot_familiarity
-#             , ncol = 2)
+grid.arrange(plot_ideology, plot_gender
+             , plot_age, plot_familiarity
+             , ncol = 2)
 
-# fix the sizes draw_plot
-#ggsave("images/exploratory_demographics.png", 
-(fixed_gridplot <- ggdraw() + 
-           draw_plot(plot_ideology,    x=0.04, y=0.75,  width=0.45, height = 0.22) +
-           draw_plot(plot_gender,      x=0.55, y=0.75,  width=0.40, height = 0.25) +
-           draw_plot(plot_age,         x=0.25, y=0.4,   width=0.70, height = 0.35) + 
-           draw_plot(plot_familiarity, x=0.25, y=0,     width=0.70, height = 0.40))#)
+#(fixed_gridplot <- ggdraw() + 
+#           draw_plot(plot_ideology,    x=0.04, y=0.75,  width=0.45, height = 0.22) +
+#           draw_plot(plot_gender,      x=0.55, y=0.75,  width=0.40, height = 0.25) +
+#           draw_plot(plot_age,         x=0.25, y=0.4,   width=0.70, height = 0.35) + 
+#           draw_plot(plot_familiarity, x=0.25, y=0,     width=0.70, height = 0.40))#)
 ```
 \newpage
 
