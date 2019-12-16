@@ -4,7 +4,7 @@ subtitle: "W241 Experiments and Causality"
 author: "Kevin Hartman, Hanna Rocks, Tim Spittle, and Jay Venkata"
 date: "December 10, 2019"
 tags: [Moral Foundations, Universal Basic Income, Survey, Experiment]
-abstract: Through this experiment we tested the treatment effect of various presentations of the moral foundations ("the frame") on a person's feelings towards a particular topic. 
+abstract: People make spontaneous decisions every day based on their moral foundations or pillars. We examine whether the political attitudes of liberals and conservatives can be influenced on the issue of Universal Basic Income (UBI). Through this experiment we manipulated two foundations- purity/sanctity and fairness/reciprocity through the use of descriptive and visual storytelling, introduce a treatment or extension to the base story, and observe their outcomes. We observed that framing issues using moral foundations may change political attitudes. In line with the initial hypothesis, conservative subjects were more amenable to a social program like the UBI after being exposed to the treatment. However there are several challenges to generalizing this finding that this paper will go into in the following sections. 
 output:
   pdf_document:
     fig_caption: yes
@@ -514,13 +514,11 @@ stargazer(model_libfair$lm, model_libpure$lm
 
 _\autoref{tab:allarmsmodel})_ presents the results of all treatments collected. Note that while our survey design included an approach to test all combinations of political ideology (`ideology`; liberal/conservative), moral foundation (`arm_story`; purity/fairness), and directionality (`arm_level`; base/extension) we did not hypothesize that a factorial design would be appropriate and therefore did not test the treatments as such. Instead, we hypothesized that specific moral foundations would resonate differently among participants of different ideologies, and therefore tested the effect of changes in directionality (`ubi_number ~ arm_level`) within each of the four arms (comprised of combinations of ideology and moral foundation).  
 
-The results demonstrate that the extension of the Purity foundation story, when shown to the Conservative participants, may positively affect participant opinions of UBI. This finding fits our prior expectation, which motivated us to focus on this arm as we gathered additional data. The Conservative participants had both a lower baseline opinion of UBI (`round(model_conpure$lm$coefficients["(Intercept)"],2)`), which means that upward influence was possible, and the Purity story was expected to resonate the most with Conservatives (according to prior research). Therefore, the Extension (counter-attitudinal) treatment of the Purity story would logically leave Conservatives who would otherwise, on average, perhaps be skeptical of UBI, feeling optimistic and focused on purity - making them more amenable to social programs.  
+The results demonstrate that the extension of the Purity foundation story, when shown to the Conservative participants, may positively affect participant opinions of UBI. This finding fits our prior expectation, which motivated us to focus on this arm as we gathered additional data. The Conservative participants had both a lower baseline opinion of UBI (`r round(model_conpure$lm$coefficients["(Intercept)"],2)`), which means that upward influence was possible, and the Purity story was expected to resonate the most with Conservatives (according to prior research). Therefore, the Extension (counter-attitudinal) treatment of the Purity story would logically leave Conservatives who would otherwise, on average, perhaps be skeptical of UBI, feeling optimistic and focused on purity - making them more amenable to social programs.  
 
 The Base (pro-attitudinal) implementation of purity showed a slight upward influence but was not statistically significant. Our prior hypothesis was that the pro-attitudinal use of a moral foundation may not be internalized consistently among participants: while some may react to an "impure" scenario of homelessness and believe that a social program like UBI would enable more impure behavior, others may see UBI as a remedy for that homelessness.  
 
-Liberal baseline opinions of UBI were at the opposite end of the spectrum when compared to the conservative group. While our hypothesis is that the outcome from treatment in Extension would yield a counter-attitudinal effect, we were unsure if we were manipulating the fairness or care foundation at this point. Since we had more direct evidence in the disgust response manipulation from our pilot we opted to concentrate on this arm of the study. The value in the liberal finding for the "fairness" story may be explored with additional research.  
-
-\newpage
+Liberal baseline opinions of UBI were at the opposite end of the spectrum when compared to the conservative group. While our hypothesis is that the outcome from treatment in Extension would yield a counter-attitudinal effect, we were unsure if we were manipulating the fairness or care foundation at this point. Since we had more direct evidence in the disgust response manipulation from our pilot we opted to concentrate on this arm of the study. The value in the liberal finding for the "fairness" story may be explored with additional research.
 
 ```{r model_conpure_interactions, echo = FALSE, results='asis'}
 
@@ -571,7 +569,7 @@ stargazer(model_conpure$lm
           , type             = stargazer_type
 )
 ```
-
+\newpage
 Given our focus on the Conservative Purity arms, we also tested covariate specifications to see if our measured average treatment effect was driven by any baseline differences between arms or if, in fact, our treatments were leading to reactions that fueled changes of opinion. _\autoref{tab:covariatesmodel}_ details these results.
 
 Gender has a significant difference at baseline (`ubi_number ~ arm_level + gender`): men had, on average, a >1 point higher baseline opinion of UBI than women. Interestingly, however, the average effect is still consistent even when accounting for this difference.
@@ -624,7 +622,7 @@ In addition, the authors put in $25 out of their own personal income to increase
 
 ## Appendix D: Study Flowchart {-}
 
-```{r flowchart, echo = FALSE, fig.height = 8, fig.width=4.8, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
+```{r flowchart, echo = FALSE, fig.height = 8.5, fig.width=5.1, fig.align="center", fig.cap="\\label{fig:study_flowchart} Study Flowchart"}
 flowchart_img = readPNG("images/flowchart.png")
 grid.raster(flowchart_img)
 ```
